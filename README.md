@@ -118,4 +118,4 @@ $env:ELECTRON_BUILDER_BINARIES_MIRROR = "https://npmmirror.com/mirrors/electron-
 
 ## 许可
 
-专有软件，保留所有权利。未经授权不得使用、复制或分发。
+本项目以 [MIT 许可证](LICENSE) 开源。软件按“现状”提供，不附带任何担保；合规自查结论仅供参考，使用者自行承担依据结论作出决定的责任。
