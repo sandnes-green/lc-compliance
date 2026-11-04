@@ -50,6 +50,23 @@ docs/
 tooling/      生成测试夹具与图标的脚本
 ```
 
+## 下载与安装
+
+安装包发布在 [GitHub Releases](https://github.com/sandnes-green/lc-compliance/releases/latest)，下载 `LCCompliance-Setup-<版本>.exe` 运行即可（Windows 10/11 x64，按用户安装，不需要管理员权限）。
+
+**安装包目前没有代码签名**，所以首次运行时 Windows SmartScreen 会提示“Windows 已保护你的电脑”：
+
+1. 点击提示里的 **更多信息**；
+2. 点击 **仍要运行**。
+
+部分杀毒软件也可能对未签名程序误报。建议下载后核对 SHA256，与 Release 页面公布的值一致再安装：
+
+```powershell
+certutil -hashfile LCCompliance-Setup-<版本>.exe SHA256
+```
+
+企业 IT 部门可以用同一个校验值登记放行。静默安装、策略配置等见 [`docs/deployment.md`](docs/deployment.md)。
+
 ## 快速开始
 
 **环境：** Windows 10/11 x64；Node.js 24（开发与测试所用版本）。
