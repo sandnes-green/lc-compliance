@@ -1,0 +1,7 @@
+# 统一换行：仓库内一律 LF，避免 Windows / 其他系统之间的换行噪音
+* text=auto eol=lf
+
+# 二进制：不做换行转换与文本比对
+*.pdf binary
+*.png binary
+*.exe binary

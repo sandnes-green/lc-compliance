@@ -1,0 +1,38 @@
+# 依赖与构建产物
+node_modules/
+dist/
+out/
+release/
+coverage/
+*.tsbuildinfo
+
+# 数据与备份：绝不能进版本库（含加密数据库、密钥文件、口令备份）
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.lcbak
+keystore.json
+
+# 证书、密钥与凭据（代码签名证书、环境变量文件）
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+*.crt
+.env
+.env.*
+!.env.example
+policy.json
+
+# 日志与临时文件
+*.log
+tmp/
+*.tmp
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

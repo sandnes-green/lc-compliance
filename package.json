@@ -1,0 +1,17 @@
+{
+  "name": "lc-compliance",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @lc/desktop",
+    "build": "npm run build -w @lc/desktop",
+    "smoke": "npm run smoke -w @lc/desktop",
+    "test": "npm test -w @lc/core -w @lc/storage -w @lc/docs -w @lc/services -w @lc/desktop",
+    "typecheck": "npm run typecheck -w @lc/core -w @lc/storage -w @lc/docs -w @lc/services -w @lc/desktop",
+    "dist": "npm run dist -w @lc/desktop",
+    "pack": "npm run pack -w @lc/desktop"
+  }
+}

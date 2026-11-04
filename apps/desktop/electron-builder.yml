@@ -1,0 +1,58 @@
+appId: com.sandnes.lc-compliance
+productName: 信用证合规自查
+executableName: LCCompliance
+copyright: Copyright © Sandnes
+
+# 打包进应用的包名（决定更新缓存目录 %LOCALAPPDATA%\lccompliance-updater）；工作区内部仍叫 @lc/desktop
+extraMetadata:
+  name: lccompliance
+
+directories:
+  output: release
+  buildResources: build
+
+# 只打包构建产物。界面库与内部包已被打进 out/，运行时需要的外置依赖见 package.json 的 dependencies
+files:
+  - out/**
+  - package.json
+  - "!**/*.map"
+  - "!**/*.md"
+  - "!**/test/**"
+  - "!**/tests/**"
+  - "!**/docs/**"
+
+asar: true
+# 这些包要在 asar 之外：原生模块、worker 线程脚本、WASM 与语言包都不能从 asar 归档里加载
+asarUnpack:
+  - "**/node_modules/@napi-rs/**"
+  - "**/node_modules/tesseract.js/**"
+  - "**/node_modules/tesseract.js-core/**"
+  - "**/node_modules/@tesseract.js-data/**"
+  - "**/node_modules/pdfjs-dist/**"
+
+# 依赖都是纯 JS 或 N-API 预编译二进制，不需要针对 Electron 重新编译
+npmRebuild: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false # 每用户安装，不需要管理员权限
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  # 静默安装（SCCM / Intune 等批量部署）完成后不要自动启动应用
+  runAfterFinish: false
+  shortcutName: 信用证合规自查
+  # 卸载程序绝不能删除用户数据（%APPDATA%\LCCompliance：加密数据库与密钥）
+  deleteAppDataOnUninstall: false
+  artifactName: LCCompliance-Setup-${version}.${ext}
+
+# 更新源只在管理员策略里配置，这里的地址仅供生成 latest.yml；.invalid 保证不会解析到任何真实主机
+publish:
+  provider: generic
+  url: https://updates.invalid/lc/

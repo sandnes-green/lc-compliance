@@ -1,0 +1,46 @@
+{
+  "name": "@lc/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc --noEmit",
+    "smoke": "electron-vite build && electron . --smoke",
+    "pack": "electron-vite build && electron-builder --win --dir --publish never",
+    "dist": "electron-vite build && electron-builder --win --publish never",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.13",
+    "@tesseract.js-data/chi_sim": "^1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "electron-updater": "^6.8.11",
+    "pdfjs-dist": "*",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@ant-design/icons": "^6.3.4",
+    "@lc/core": "*",
+    "@lc/docs": "*",
+    "@lc/services": "*",
+    "@lc/storage": "*",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "antd": "^6.7.0",
+    "electron": "45.2.2",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^2.1.0"
+  },
+  "description": "信用证合规自查 — 出口企业交单前自查桌面应用",
+  "author": "Sandnes",
+  "productName": "信用证合规自查"
+}

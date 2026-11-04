@@ -1,0 +1,26 @@
+{
+  "name": "@lc/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lc/core": "*",
+    "@tesseract.js-data/chi_sim": "^1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "pdfjs-dist": "*",
+    "tesseract.js": "^7.0.0",
+    "@napi-rs/canvas": "^1.0.13",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "pdf-lib": "^1.17.1",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
