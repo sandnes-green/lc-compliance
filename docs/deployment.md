@@ -1,15 +1,15 @@
 # 部署与运维指南
 
-适用版本：1.0.0 · 平台：Windows 10/11 x64
+适用版本：1.1.0 · 平台：Windows 10/11 x64
 
 ## 1. 安装
 
-安装包：`LCCompliance-Setup-1.0.0.exe`（约 177 MB，NSIS）。
+安装包：`LCCompliance-Setup-1.1.0.exe`（约 177 MB，NSIS）。
 
 | 项目 | 说明 |
 |---|---|
 | 安装范围 | **每用户安装**，不需要管理员权限。默认目录 `%LOCALAPPDATA%\Programs\…`，向导里可改 |
-| 静默安装 | `LCCompliance-Setup-1.0.0.exe /S`；指定目录加 `/D=C:\目标目录`（`/D=` 必须是最后一个参数，路径不加引号） |
+| 静默安装 | `LCCompliance-Setup-1.1.0.exe /S`；指定目录加 `/D=C:\目标目录`（`/D=` 必须是最后一个参数，路径不加引号） |
 | 静默安装后 | **不会**自动启动应用，适合 SCCM / Intune 等批量部署 |
 | 快捷方式 | 开始菜单、桌面 |
 | 静默卸载 | 运行安装目录下的 `Uninstall LCCompliance.exe /S` |
