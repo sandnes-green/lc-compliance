@@ -54,7 +54,10 @@ describe("规则名称", () => {
       expect(ruleTitle(r.id, "zh")).not.toBe(r.id);
       expect(ruleTitle(r.id, "en")).not.toBe(r.id);
     }
-    expect(Object.keys(RULE_TITLES).sort()).toEqual(allRules.map((r) => r.id).sort());
+    // 国别风险与船东单规则依赖数据库里的国别规则，在审查时动态构建，不在 allRules 里，但名称仍在这里登记
+    const dynamic = ["LCR-COUNTRY-RISK", "UCP600-20-CARRIER-BL"];
+    expect(Object.keys(RULE_TITLES).filter((id) => !dynamic.includes(id)).sort()).toEqual(allRules.map((r) => r.id).sort());
+    expect(RULE_TITLES["LCR-COUNTRY-RISK"]).toBeDefined();
     expect(ruleTitle("UNKNOWN", "en")).toBe("UNKNOWN");
   });
 });

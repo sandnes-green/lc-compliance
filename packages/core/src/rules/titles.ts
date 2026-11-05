@@ -12,6 +12,7 @@ export const RULE_TITLES: Record<string, Record<Lang, string>> = {
   "UCP600-18C-GOODS": { zh: "发票货物描述", en: "Invoice goods description" },
   "UCP600-28-INSURANCE": { zh: "保险单币种、金额与日期", en: "Insurance currency, amount & date" },
   "UCP600-20A-PORTS": { zh: "装运港与卸货港", en: "Ports of loading & discharge" },
+  "LCR-COUNTRY-RISK": { zh: "国别风险提示", en: "Country risk notice" },
 };
 
 /** 取规则名称；自定义检查项的标题由审查记录里的快照提供；未登记的规则回退为规则 ID */

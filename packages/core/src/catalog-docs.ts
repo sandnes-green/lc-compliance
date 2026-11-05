@@ -119,4 +119,12 @@ export const DOC_CATALOG: Record<string, Entry> = {
     zh: { message: "疑似软条款：检验证书与申请人有关 ——「{snippet}」", suggestion: SOFT_SUGGEST_ZH },
     en: { message: "Possible soft clause: the inspection certificate involves the applicant — “{snippet}”", suggestion: SOFT_SUGGEST_EN },
   },
+  "country.hit": {
+    zh: { message: "开证行所在国家：{countryZh}（{country}）{stateZh}。该国的要求：{reqZh}。{note}", suggestion: "发运前对照这些要求逐项确认；国别规则由你们公司维护，可在“国别规则”中修改。" },
+    en: { message: "Issuing bank country: {countryEn} ({country}){stateEn}. Requirements: {reqEn}. {note}", suggestion: "Check each requirement before shipping; the country rules are maintained by your company under “Country rules”." },
+  },
+  "country.unknown": {
+    zh: { message: "未能从 52A 识别开证行所在国家，国别规则未检查", suggestion: "请人工确认开证行所在国家，并对照“国别规则”。" },
+    en: { message: "The issuing bank country could not be read from field 52A, so country rules were not checked", suggestion: "Confirm the issuing bank country manually and compare it with the country rules." },
+  },
 };

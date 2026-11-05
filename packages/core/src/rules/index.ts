@@ -8,6 +8,7 @@ export * from "./documents";
 export * from "./lcReview";
 export * from "./titles";
 export * from "./custom";
+export * from "./countryRisk";
 
 /** 全部内置规则：先审证，再审单 */
 export const allRules: Rule[] = [...lcReviewRules, ...ucp600Rules, ...documentRules];
