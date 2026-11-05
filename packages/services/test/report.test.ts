@@ -204,3 +204,57 @@ describe("自定义检查项在报告中的呈现", () => {
     expect(r.coverage.map((c) => c.title)).toEqual(expect.arrayContaining(["提单注明运费预付", "电话确认买方"]));
   });
 });
+
+describe("国别规则与船东单在报告中的呈现", () => {
+  const BD_LC = `:52A:TESTBDDHXXX
+${LC}`;
+  const pres = (issuerName: string, signingCapacity?: string): Presentation => ({
+    presentationDate: "2024-10-15",
+    transport: { shipmentDate: "2024-10-10", portOfLoading: "NINGBO", portOfDischarge: "NEW YORK", issuerName, signingCapacity },
+  });
+  const fwd = make(BD_LC, pres("ABC LOGISTICS CO", "as agent"));
+  const conf = make(BD_LC, pres("XYZ SHIPPING CO"));
+
+  it("运输类修改清单：carrierBl 发现归入「运输单据」", () => {
+    for (const m of [fwd, conf]) {
+      const r = buildReport(m.input("zh"));
+      const code = m === fwd ? "carrierBl.forwarder" : "carrierBl.confirm";
+      expect(m.run.findings.some((f) => f.code === code)).toBe(true);
+      expect(actionGroupOf(m.run.findings.find((f) => f.code === code)!)).toBe("transport");
+      const g = r.actions.find((x) => x.title === "运输单据")!;
+      expect(g.items.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("中英文标题、国别规则来源与签发人事实行；不再出现「手册依据」", () => {
+    expect(fwd.run.findings.some((f) => f.code === "country.hit")).toBe(true);
+    const zh = buildReport(fwd.input("zh"));
+    const en = buildReport(fwd.input("en"));
+    const evZh = [...zh.lcFindings, ...zh.docFindings].flatMap((f) => f.evidence);
+    const evEn = [...en.lcFindings, ...en.docFindings].flatMap((f) => f.evidence);
+    expect(evZh.some((e) => e.source === "国别规则")).toBe(true);
+    expect(evEn.some((e) => e.source === "Country rule")).toBe(true);
+    expect(evZh.some((e) => e.source === "手册依据")).toBe(false);
+    expect(evEn.some((e) => e.source === "Manual source")).toBe(false);
+    expect(evZh.some((e) => e.value.includes("必须船东单") && e.value.includes("Carrier-issued bill of lading required"))).toBe(true);
+    const html = renderReportHtml(zh);
+    expect(html).toContain("国别规则");
+    expect(html).not.toContain("手册依据");
+
+    const tz = zh.presentation!.find((g) => g.title === "运输单据")!.rows;
+    expect(tz).toContainEqual(["提单签发人", "ABC LOGISTICS CO"]);
+    expect(tz).toContainEqual(["签发身份", "as agent"]);
+    const te = en.presentation!.find((g) => g.title === "Transport document")!.rows;
+    expect(te).toContainEqual(["B/L issuer", "ABC LOGISTICS CO"]);
+    expect(te).toContainEqual(["Signing capacity", "as agent"]);
+
+    const cz = buildReport(conf.input("zh"));
+    const ce = buildReport(conf.input("en"));
+    expect(zh.docFindings.some((f) => f.message.includes("看起来是货代"))).toBe(true);
+    expect(en.docFindings.some((f) => f.message.includes("the issuer looks like a forwarder"))).toBe(true);
+    expect(cz.docFindings.some((f) => f.message.includes("无法确认提单是否由承运人签发"))).toBe(true);
+    expect(ce.docFindings.some((f) => f.message.includes("cannot be confirmed"))).toBe(true);
+    expect(zh.lcFindings.some((f) => f.message.includes("开证行所在国家"))).toBe(true);
+    expect(en.lcFindings.some((f) => f.message.includes("Issuing bank country"))).toBe(true);
+  });
+});

@@ -1,4 +1,4 @@
-import { regionName, type CountryRule } from "../countryRules";
+import { REQUIREMENT_LABELS, regionName, type CountryRule } from "../countryRules";
 import { makeFinding } from "../messages";
 import type { Evidence, LetterOfCredit, PresentationRule } from "../model";
 
@@ -110,7 +110,7 @@ function sources(lc: LetterOfCredit, rules: CountryRule[]): Source[] {
     out.push({
       zh: `国别规则（${regionName(code, "zh")}）`,
       en: `country rule (${regionName(code, "en")})`,
-      evidence: { document: "manual", field: `country:${code}`, value: "carrierBl" },
+      evidence: { document: "policy", field: `country:${code}`, value: `${REQUIREMENT_LABELS.carrierBl.zh} / ${REQUIREMENT_LABELS.carrierBl.en}` },
     });
   }
   return out;

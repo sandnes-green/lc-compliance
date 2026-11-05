@@ -776,32 +776,39 @@ export class CaseStore {
     }));
   }
 
+  /** 审计里只记非敏感字段，绝不写备注原文 */
+  private countryRuleAudit(id: string, d: CountryRuleDraft): Record<string, unknown> {
+    return { id, countryCode: d.countryCode, level: d.level, requirements: d.requirements, enabled: d.enabled, reviewed: d.reviewed };
+  }
+
   /** 调用方须已用 parseCountryRuleDraft 校验 */
   addCountryRule(d: CountryRuleDraft): CountryRule {
     let id = "";
     this.tx(() => {
       id = this.insertCountryRule(d);
-      this.audit("countryRule.add", null, { id, countryCode: d.countryCode });
+      this.audit("countryRule.add", null, this.countryRuleAudit(id, d));
     });
     return this.listCountryRules().find((r) => r.id === id)!;
   }
 
   updateCountryRule(id: string, d: CountryRuleDraft): CountryRule {
     this.requireCountryRule(id);
+    const before = this.listCountryRules().find((r) => r.id === id)!;
     this.tx(() => {
       this.db
         .prepare("UPDATE country_rules SET country_code=?,level=?,requirements_json=?,note=?,enabled=?,reviewed=?,updated_at=? WHERE id=?")
         .run(d.countryCode, d.level, this.seal("country_rules", "requirements_json", JSON.stringify(d.requirements)), this.seal("country_rules", "note", d.note), d.enabled ? 1 : 0, d.reviewed ? 1 : 0, new Date().toISOString(), id);
-      this.audit("countryRule.update", null, { id, countryCode: d.countryCode });
+      this.audit("countryRule.update", null, { ...this.countryRuleAudit(id, d), noteChanged: before.note !== d.note });
     });
     return this.listCountryRules().find((r) => r.id === id)!;
   }
 
   deleteCountryRule(id: string): void {
     this.requireCountryRule(id);
+    const before = this.listCountryRules().find((r) => r.id === id)!;
     this.tx(() => {
       this.db.prepare("DELETE FROM country_rules WHERE id = ?").run(id);
-      this.audit("countryRule.delete", null, { id });
+      this.audit("countryRule.delete", null, this.countryRuleAudit(id, before));
     });
   }
 

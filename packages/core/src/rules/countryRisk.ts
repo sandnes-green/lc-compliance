@@ -47,7 +47,11 @@ export function buildCountryRiskRule(rules: CountryRule[]): LcRule {
             },
             evidence: [
               { document: "lc", field: "52A", value: lc.issuingBankBic ?? "" },
-              { document: "manual", field: `country:${r.countryCode}`, value: r.note || r.requirements.join(",") },
+              {
+                document: "policy",
+                field: `country:${r.countryCode}`,
+                value: r.note || r.requirements.map((q) => `${REQUIREMENT_LABELS[q].zh} / ${REQUIREMENT_LABELS[q].en}`).join("；") || "—",
+              },
             ],
           }),
         );

@@ -67,7 +67,7 @@ export function actionGroupOf(f: Finding): ActionGroup {
   if (f.code.startsWith("lc.") || f.code === "shipment.late" || f.code === "presentation.expired") return "lc";
   if (f.code.startsWith("presentation.")) return "timing";
   if (f.code.startsWith("invoice.")) return "invoice";
-  if (f.code.startsWith("transport.")) return "transport";
+  if (f.code.startsWith("transport.") || f.code.startsWith("carrierBl.")) return "transport";
   if (f.code.startsWith("insurance.")) return "insurance";
   return "lc";
 }
@@ -135,6 +135,8 @@ function presentationFacts(p: Presentation | null, s: ReportStrings): Report["pr
         [f.shipmentDate, p.transport?.shipmentDate],
         [f.portOfLoading, p.transport?.portOfLoading],
         [f.portOfDischarge, p.transport?.portOfDischarge],
+        [f.issuerName, p.transport?.issuerName],
+        [f.signingCapacity, p.transport?.signingCapacity],
       ],
     },
     {

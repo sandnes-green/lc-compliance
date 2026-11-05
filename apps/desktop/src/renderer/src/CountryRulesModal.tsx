@@ -28,6 +28,11 @@ export default function CountryRulesModal({ open, onClose }: Props) {
     if (open) void load();
   }, [open, load]);
 
+  // 关闭主窗口时同时丢弃编辑中的子窗口，避免重新打开时出现陈旧的编辑框
+  useEffect(() => {
+    if (!open) setEditing(null);
+  }, [open]);
+
   // 表格里的开关直接带着整条草稿保存
   const patch = async (rule: CountryRule, change: Partial<CountryRuleDraft>) => {
     const { id, ...draft } = rule;

@@ -21,7 +21,7 @@ export interface ReportStrings {
   userDefined: string;
   suggestion: string;
   evidenceCols: { source: string; field: string; value: string };
-  documents: { lc: string; invoice: string; transport: string; insurance: string; manual: string };
+  documents: { lc: string; invoice: string; transport: string; insurance: string; manual: string; policy: string };
   coverageStatus: { passed: string; issues: string; skipped: string; legacy: string };
   actionGroups: { lc: string; timing: string; invoice: string; transport: string; insurance: string };
   actionsEmpty: string;
@@ -30,7 +30,7 @@ export interface ReportStrings {
     presentationPeriod: string; days: string; defaultDays: string; applicant: string; beneficiary: string; portOfLoading: string; portOfDischarge: string;
     partial: string; transhipment: string; goods: string; documents: string; conditions: string;
     presentationDate: string; sellerName: string; buyerName: string; goodsDescription: string; currency: string; invoiceAmount: string; shipmentDate: string;
-    insuredAmount: string; insuranceDate: string;
+    insuredAmount: string; insuranceDate: string; issuerName: string; signingCapacity: string;
   };
   docGroups: { invoice: string; transport: string; insurance: string; general: string };
   disclaimer: string[];
@@ -68,7 +68,7 @@ export const REPORT_STRINGS: Record<Lang, ReportStrings> = {
     userDefined: "手工添加",
     suggestion: "建议",
     evidenceCols: { source: "来源", field: "字段", value: "值" },
-    documents: { lc: "信用证", invoice: "发票", transport: "运输单据", insurance: "保险单据", manual: "手册依据" },
+    documents: { lc: "信用证", invoice: "发票", transport: "运输单据", insurance: "保险单据", manual: "手册依据", policy: "国别规则" },
     coverageStatus: { passed: "已检查，未发现问题", issues: "已检查，发现 {n} 项", skipped: "未检查：缺少所需数据", legacy: "旧版记录，无检查清单" },
     actionGroups: {
       lc: "信用证 / 与申请人沟通",
@@ -84,7 +84,7 @@ export const REPORT_STRINGS: Record<Lang, ReportStrings> = {
       portOfLoading: "装运港", portOfDischarge: "卸货港", partial: "分批装运 (43P)", transhipment: "转运 (43T)", goods: "货物描述 (45A)",
       documents: "单据要求 (46A)", conditions: "附加条件 (47A)",
       presentationDate: "拟交单日期", sellerName: "卖方（出具人）", buyerName: "买方（抬头）", goodsDescription: "货物描述", currency: "币种", invoiceAmount: "金额",
-      shipmentDate: "装运日期", insuredAmount: "投保金额", insuranceDate: "保险单日期",
+      shipmentDate: "装运日期", insuredAmount: "投保金额", insuranceDate: "保险单日期", issuerName: "提单签发人", signingCapacity: "签发身份",
     },
     docGroups: { invoice: "商业发票", transport: "运输单据", insurance: "保险单据", general: "交单信息" },
     disclaimer: [
@@ -124,7 +124,7 @@ export const REPORT_STRINGS: Record<Lang, ReportStrings> = {
     userDefined: "added by hand",
     suggestion: "Suggestion",
     evidenceCols: { source: "Source", field: "Field", value: "Value" },
-    documents: { lc: "L/C", invoice: "Invoice", transport: "Transport doc", insurance: "Insurance doc", manual: "Manual source" },
+    documents: { lc: "L/C", invoice: "Invoice", transport: "Transport doc", insurance: "Insurance doc", manual: "Manual source", policy: "Country rule" },
     coverageStatus: { passed: "Checked, nothing found", issues: "Checked, {n} finding(s)", skipped: "Not checked: required data missing", legacy: "Older record without a checklist" },
     actionGroups: {
       lc: "Letter of credit / talk to the applicant",
@@ -140,7 +140,7 @@ export const REPORT_STRINGS: Record<Lang, ReportStrings> = {
       portOfLoading: "Port of loading", portOfDischarge: "Port of discharge", partial: "Partial shipments (43P)", transhipment: "Transhipment (43T)", goods: "Goods (45A)",
       documents: "Documents required (46A)", conditions: "Additional conditions (47A)",
       presentationDate: "Planned presentation date", sellerName: "Seller (issuer)", buyerName: "Buyer (addressee)", goodsDescription: "Goods description", currency: "Currency", invoiceAmount: "Amount",
-      shipmentDate: "Shipment date", insuredAmount: "Insured amount", insuranceDate: "Insurance document date",
+      shipmentDate: "Shipment date", insuredAmount: "Insured amount", insuranceDate: "Insurance document date", issuerName: "B/L issuer", signingCapacity: "Signing capacity",
     },
     docGroups: { invoice: "Commercial invoice", transport: "Transport document", insurance: "Insurance document", general: "Presentation" },
     disclaimer: [

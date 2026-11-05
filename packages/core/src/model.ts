@@ -95,7 +95,7 @@ export interface CaseContext {
 export type Severity = "discrepancy" | "risk" | "doubt" | "info";
 
 export interface Evidence {
-  document: "lc" | "invoice" | "transport" | "insurance" | "manual";
+  document: "lc" | "invoice" | "transport" | "insurance" | "manual" | "policy";
   field: string;
   value: string;
 }

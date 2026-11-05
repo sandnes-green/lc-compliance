@@ -12,13 +12,20 @@ describe("country_rules", () => {
     const s = new CaseStore();
     expect(s.listCountryRules().map((r) => [r.countryCode, r.reviewed])).toEqual([["BD", false], ["TR", false]]);
   });
-  it("用户删光之后重新打开不会再次写入", () => {
-    const s = new CaseStore();
-    for (const r of s.listCountryRules()) s.deleteCountryRule(r.id);
-    expect(s.listCountryRules()).toEqual([]);
-    // 同一连接上再次触发种子逻辑（模拟重启）
-    (s as unknown as { seedCountryRules(): void }).seedCountryRules();
-    expect(s.listCountryRules()).toEqual([]);
+  it("用户删光之后重新打开（文件库）不会再次写入", () => {
+    const dir = mkdtempSync(join(tmpdir(), "lc-cr-"));
+    const file = join(dir, "t.db");
+    try {
+      const a = new CaseStore(file);
+      for (const r of a.listCountryRules()) a.deleteCountryRule(r.id);
+      expect(a.listCountryRules()).toEqual([]);
+      a.close();
+      const b = new CaseStore(file);
+      expect(b.listCountryRules()).toEqual([]);
+      b.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   it("文件库重复打开：起步清单只写一次，数据保留", () => {
     const dir = mkdtempSync(join(tmpdir(), "lc-cr-"));
@@ -57,5 +64,20 @@ describe("country_rules", () => {
     for (const r of s.listCountryRules()) s.updateCountryRule(r.id, { ...r, enabled: false });
     const c = s.createCase({ name: "t", lcText: LC("TESTBDDHXXX") });
     expect(s.runCase(c.id).findings.some((f) => f.code.startsWith("country."))).toBe(false);
+  });
+  it("审计只记非敏感字段，update 带 noteChanged，备注原文不进任何审计详情", () => {
+    const s = new CaseStore();
+    const a = s.addCountryRule({ ...draft, note: "NOTE-SECRET-1234" });
+    s.updateCountryRule(a.id, { ...draft, level: "notice", enabled: false, note: "NOTE-SECRET-1234" });
+    s.updateCountryRule(a.id, { ...draft, note: "NOTE-SECRET-5678" });
+    s.deleteCountryRule(a.id);
+    const log = s.listAudit().filter((x) => x.action.startsWith("countryRule."));
+    expect(log.map((x) => x.action)).toEqual(["countryRule.add", "countryRule.update", "countryRule.update", "countryRule.delete"]);
+    const base = { id: a.id, countryCode: "PK", requirements: ["carrierBl"] };
+    expect(log[0]!.detail).toEqual({ ...base, level: "high", enabled: true, reviewed: true });
+    expect(log[1]!.detail).toEqual({ ...base, level: "notice", enabled: false, reviewed: true, noteChanged: false });
+    expect(log[2]!.detail).toEqual({ ...base, level: "high", enabled: true, reviewed: true, noteChanged: true });
+    for (const e of s.listAudit()) expect(JSON.stringify(e.detail)).not.toContain("NOTE-SECRET");
+    expect(s.verifyAudit()).toBeNull();
   });
 });
