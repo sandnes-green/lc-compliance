@@ -1,6 +1,7 @@
 /** 界面文案字典（纯数据，不依赖 React，便于单独测试） */
 import type { Language } from "../../shared/api";
 import { enAi, zhAi } from "./i18n-ai";
+import { enCountry, zhCountry } from "./i18n-country";
 import { enGuide, zhGuide } from "./i18n-guide";
 import { enKb, zhKb } from "./i18n-kb";
 import { enOcr, zhOcr } from "./i18n-ocr";
@@ -149,7 +150,7 @@ const en: Dict = {
   "err.file.notText": "Not a text file: {name}",
 };
 
-export const DICTS: Record<Language, Dict> = { zh: { ...zh, ...zhAi, ...zhRules, ...zhOcr, ...zhReport, ...zhKb, ...zhSec, ...zhGuide }, en: { ...en, ...enAi, ...enRules, ...enOcr, ...enReport, ...enKb, ...enSec, ...enGuide } };
+export const DICTS: Record<Language, Dict> = { zh: { ...zh, ...zhAi, ...zhRules, ...zhOcr, ...zhReport, ...zhKb, ...zhSec, ...zhGuide, ...zhCountry }, en: { ...en, ...enAi, ...enRules, ...enOcr, ...enReport, ...enKb, ...enSec, ...enGuide, ...enCountry } };
 
 export const fill = (tpl: string, params?: Record<string, string | number>) =>
   tpl.replace(/\{(\w+)\}/g, (_, k: string) => (params && k in params ? String(params[k]) : `{${k}}`));

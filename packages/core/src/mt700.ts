@@ -44,6 +44,21 @@ export function partyName(field?: string): string | undefined {
   return line || undefined;
 }
 
+const BIC = /^[A-Z]{4}([A-Z]{2})[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/;
+
+/** 52A：可选的首行 /账号 或 /D/…，其后是 BIC。只在整行恰好是合法 BIC 时才取国家，其余一律不猜 */
+export function parseBank(field?: string): { bic?: string; country?: string } {
+  const line = field
+    ?.split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l !== "" && !l.startsWith("/"))
+    .pop();
+  // 大小写不敏感，但原行必须只由字母数字组成（含空格的自由文本一律不认）
+  const bic = line && /^[A-Za-z0-9]+$/.test(line) ? line.toUpperCase() : undefined;
+  const m = bic ? BIC.exec(bic) : null;
+  return m ? { bic, country: m[1] } : {};
+}
+
 export class Mt700Error extends AppError {}
 
 export function parseMt700(message: string): LetterOfCredit {
@@ -82,6 +97,9 @@ export function parseMt700(message: string): LetterOfCredit {
     if (m) lc.presentationDays = Number(m[1]);
   }
   if (f["40A"]) lc.form = f["40A"].trim();
+  const bank = parseBank(f["52A"]);
+  lc.issuingBankBic = bank.bic;
+  lc.issuingCountry = bank.country;
   lc.applicant = f["50"];
   lc.applicantName = partyName(f["50"]);
   lc.beneficiary = f["59"];

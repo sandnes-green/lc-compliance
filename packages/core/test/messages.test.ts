@@ -54,7 +54,15 @@ describe("规则名称", () => {
       expect(ruleTitle(r.id, "zh")).not.toBe(r.id);
       expect(ruleTitle(r.id, "en")).not.toBe(r.id);
     }
-    expect(Object.keys(RULE_TITLES).sort()).toEqual(allRules.map((r) => r.id).sort());
+    // 国别风险与船东单规则依赖数据库里的国别规则，在审查时动态构建，不在 allRules 里，但名称仍在这里登记
+    const { buildCountryRiskRule, buildCarrierBlRule } = await import("../src");
+    const dynamic = [buildCountryRiskRule([]).id, buildCarrierBlRule([]).id];
+    for (const id of dynamic) {
+      expect(RULE_TITLES[id], id).toBeDefined();
+      expect(ruleTitle(id, "zh"), id).not.toBe(id);
+      expect(ruleTitle(id, "en"), id).not.toBe(id);
+    }
+    expect(Object.keys(RULE_TITLES).filter((id) => !dynamic.includes(id)).sort()).toEqual(allRules.map((r) => r.id).sort());
     expect(ruleTitle("UNKNOWN", "en")).toBe("UNKNOWN");
   });
 });

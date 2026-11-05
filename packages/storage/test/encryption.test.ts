@@ -114,6 +114,7 @@ describe("加密存储", () => {
       documents: ["id", "case_id", "doc_type", "source_kind", "chars", "needs_ocr", "created_at", "extracted_at", "ocr_confidence"],
       manuals: ["id", "source_kind", "chars", "ocr_confidence", "created_at"],
       check_items: ["id", "kind", "scope", "severity", "source_manual_id", "status", "origin", "created_at", "updated_at"],
+      country_rules: ["id", "country_code", "level", "enabled", "reviewed", "created_at", "updated_at"],
       llm_log: ["id", "at", "provider", "model", "case_id", "attempt", "outcome"],
       audit_log: ["id", "at", "action", "case_id", "hash"],
       settings: ["key", "value"],
@@ -238,5 +239,62 @@ describe("backupTo（一致性快照）", () => {
     expect(b.getCase(c.id)!.name).toBe(MARK.caseName);
     expect(b.verifyIntegrity().ok).toBe(true);
     b.close();
+  });
+});
+
+describe("国别规则表的加密", () => {
+  const NOTE = "COUNTRY-NOTE-MARK-7741";
+  const codes = (s: CaseStore) => s.listCountryRules().map((r) => r.countryCode);
+  const rawRules = () => {
+    const raw = new DatabaseSync(file, { readOnly: true });
+    const rows = raw.prepare("SELECT requirements_json, note FROM country_rules").all() as { requirements_json: string; note: string }[];
+    raw.close();
+    return rows;
+  };
+  const rule = { countryCode: "PK", level: "high" as const, requirements: ["carrierBl" as const], note: NOTE, enabled: true, reviewed: true };
+
+  it("含起步清单的明文库带密钥重新打开：requirements_json 与 note 变成密文，数据不变", () => {
+    const plain = new CaseStore(file);
+    const before = plain.listCountryRules();
+    plain.close();
+    expect(before.length).toBe(2);
+    expect(rawRules().some((r) => r.note.startsWith(SEAL_PREFIX))).toBe(false);
+
+    const s = new CaseStore(file, { cipher });
+    expect(s.listCountryRules()).toEqual(before);
+    s.close();
+    const rows = rawRules();
+    expect(rows.length).toBe(2);
+    for (const r of rows) {
+      expect(r.requirements_json.startsWith(SEAL_PREFIX)).toBe(true);
+      expect(r.note.startsWith(SEAL_PREFIX)).toBe(true);
+    }
+  });
+
+  it("加密库关闭后用同一密钥重开：规则保留、不重复写入起步清单；删除后仍保持删除", () => {
+    new CaseStore(file, { cipher }).close();
+    const a = new CaseStore(file, { cipher });
+    expect(codes(a)).toEqual(["BD", "TR"]);
+    a.deleteCountryRule(a.listCountryRules()[0]!.id);
+    a.close();
+    const b = new CaseStore(file, { cipher });
+    expect(codes(b)).toEqual(["TR"]);
+    b.close();
+  });
+
+  it("自定义备注不会以明文出现在主文件或 -wal 中", () => {
+    const s = new CaseStore(file, { cipher });
+    s.addCountryRule(rule);
+    expect(s.listCountryRules().some((r) => r.note === NOTE)).toBe(true);
+    expect(fileContains(NOTE)).toBe(false); // 连接未关闭，数据可能还在 -wal 里
+    s.close();
+    expect(fileContains(NOTE)).toBe(false);
+  });
+
+  it("对照：不加密时备注确实出现在文件里", () => {
+    const s = new CaseStore(file);
+    s.addCountryRule(rule);
+    s.close();
+    expect(fileContains(NOTE)).toBe(true);
   });
 });

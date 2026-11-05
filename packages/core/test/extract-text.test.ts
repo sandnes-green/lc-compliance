@@ -94,3 +94,19 @@ describe("按单据类型的抽取范围", () => {
     expect(seen[0]![0]!.content).toMatch(/sum insured/i);
   });
 });
+
+describe("运输单据的签发人字段", () => {
+  it("抽取 issuerName 与 signingCapacity，并映射到 TransportDocData", async () => {
+    const text = "BILL OF LADING\nCarrier: Evergreen Marine Corp.\nSigned for the Carrier, Evergreen Marine Corp. as carrier";
+    const r = await extractFields(
+      fake([
+        { name: "issuerName", value: "Evergreen Marine Corp.", quote: "Evergreen Marine Corp." },
+        { name: "signingCapacity", value: "as carrier", quote: "as carrier" },
+      ]),
+      "transport",
+      text,
+    );
+    expect(r.rejected).toEqual([]);
+    expect(toTransportData(r)).toMatchObject({ issuerName: "Evergreen Marine Corp.", signingCapacity: "as carrier" });
+  });
+});
