@@ -1,9 +1,10 @@
-import { BookOutlined, DeleteOutlined, PlusOutlined, QuestionCircleOutlined, SettingOutlined } from "@ant-design/icons";
+import { BookOutlined, DeleteOutlined, GlobalOutlined, PlusOutlined, QuestionCircleOutlined, SettingOutlined } from "@ant-design/icons";
 import { formatLocalTime } from "@lc/core";
 import { App as AntApp, Button, Layout, List, Popconfirm, Segmented, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import type { CaseSummary, Result } from "../../shared/api";
 import CaseView from "./CaseView";
+import CountryRulesModal from "./CountryRulesModal";
 import GuideDrawer, { QuickStart } from "./GuideDrawer";
 import { useI18n } from "./i18n";
 import KnowledgeModal from "./KnowledgeModal";
@@ -22,6 +23,7 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   /** 首次启动自动打开的那一次（带欢迎语） */
   const [guideWelcome, setGuideWelcome] = useState(false);
@@ -94,6 +96,9 @@ export default function App() {
           <Button icon={<BookOutlined />} block style={{ marginTop: 8 }} onClick={() => setKnowledgeOpen(true)}>
             {t("btn.knowledge")}
           </Button>
+          <Button icon={<GlobalOutlined />} block style={{ marginTop: 8 }} onClick={() => setCountryOpen(true)}>
+            {t("btn.country")}
+          </Button>
           <Button icon={<SettingOutlined />} block style={{ marginTop: 8 }} onClick={() => setSettingsOpen(true)}>
             {t("btn.settings")}
           </Button>
@@ -132,6 +137,7 @@ export default function App() {
       </Content>
       <GuideDrawer open={guideOpen} welcome={guideWelcome} onClose={() => setGuideOpen(false)} />
       <KnowledgeModal open={knowledgeOpen} onClose={() => setKnowledgeOpen(false)} />
+      <CountryRulesModal open={countryOpen} onClose={() => setCountryOpen(false)} />
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <NewCaseModal
         open={creating}
