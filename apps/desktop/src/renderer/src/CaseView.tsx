@@ -33,7 +33,7 @@ function toPresentation(v: FormValues): Presentation {
       buyerName: blank(v.buyerName),
       goodsDescription: blank(v.goodsDescription),
     }),
-    transport: group({ shipmentDate: blank(v.shipmentDate), portOfLoading: blank(v.portOfLoading), portOfDischarge: blank(v.portOfDischarge) }),
+    transport: group({ shipmentDate: blank(v.shipmentDate), portOfLoading: blank(v.portOfLoading), portOfDischarge: blank(v.portOfDischarge), issuerName: blank(v.issuerName), signingCapacity: blank(v.signingCapacity) }),
     insurance: group({ currency: currency(v.insuranceCurrency), amount: num(v.insuranceAmount), date: blank(v.insuranceDate) }),
   };
 }
@@ -49,6 +49,8 @@ function toFormValues(p: Presentation | null): FormValues {
     shipmentDate: p?.transport?.shipmentDate,
     portOfLoading: p?.transport?.portOfLoading,
     portOfDischarge: p?.transport?.portOfDischarge,
+    issuerName: p?.transport?.issuerName,
+    signingCapacity: p?.transport?.signingCapacity,
     insuranceCurrency: p?.insurance?.currency,
     insuranceAmount: p?.insurance?.amount?.toString(),
     insuranceDate: p?.insurance?.date,
@@ -176,6 +178,14 @@ export default function CaseView({ caseId, initialTab = "lc", unwrap, onChanged 
                       <Input style={{ width: 280 }} />
                     </Form.Item>
                     <Form.Item name="portOfDischarge" label={t("docs.portOfDischarge")} extra={lc.portOfDischarge && `L/C: ${lc.portOfDischarge}`}>
+                      <Input style={{ width: 280 }} />
+                    </Form.Item>
+                  </Space>
+                  <Space align="start">
+                    <Form.Item name="issuerName" label={t("docs.issuerName")}>
+                      <Input style={{ width: 280 }} />
+                    </Form.Item>
+                    <Form.Item name="signingCapacity" label={t("docs.signingCapacity")} extra={t("docs.signingCapacityHint")}>
                       <Input style={{ width: 280 }} />
                     </Form.Item>
                   </Space>

@@ -16,6 +16,8 @@ export interface DocFormValues {
   shipmentDate?: string;
   portOfLoading?: string;
   portOfDischarge?: string;
+  issuerName?: string;
+  signingCapacity?: string;
   insuranceCurrency?: string;
   insuranceAmount?: string;
   insuranceDate?: string;
@@ -36,7 +38,7 @@ const FORM_FIELD: Record<DocKind, Record<string, keyof DocFormValues>> = {
     buyerName: "buyerName",
     goodsDescription: "goodsDescription",
   },
-  transport: { shipmentDate: "shipmentDate", portOfLoading: "portOfLoading", portOfDischarge: "portOfDischarge" },
+  transport: { shipmentDate: "shipmentDate", portOfLoading: "portOfLoading", portOfDischarge: "portOfDischarge", issuerName: "issuerName", signingCapacity: "signingCapacity" },
   insurance: { currency: "insuranceCurrency", amount: "insuranceAmount", date: "insuranceDate" },
 };
 
