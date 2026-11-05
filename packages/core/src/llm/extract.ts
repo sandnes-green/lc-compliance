@@ -7,7 +7,7 @@ type FieldKind = "currency" | "amount" | "date" | "text";
 
 const SCHEMAS: Record<DocType, Record<string, FieldKind>> = {
   invoice: { currency: "currency", amount: "amount", date: "date", sellerName: "text", buyerName: "text", goodsDescription: "text" },
-  transport: { shipmentDate: "date", portOfLoading: "text", portOfDischarge: "text" },
+  transport: { shipmentDate: "date", portOfLoading: "text", portOfDischarge: "text", issuerName: "text", signingCapacity: "text" },
   insurance: { currency: "currency", amount: "amount", date: "date" },
 };
 
@@ -18,7 +18,9 @@ const HINTS: Record<DocType, string> = {
     "goodsDescription: the description of goods copied verbatim (it may span several lines).",
   transport:
     "shipmentDate: the shipped-on-board / date of shipment as YYYY-MM-DD (the on-board notation date if present); " +
-    "portOfLoading: the port of loading as written; portOfDischarge: the port of discharge as written.",
+    "portOfLoading: the port of loading as written; portOfDischarge: the port of discharge as written; " +
+    "issuerName: the name of the party that issued the bill of lading (the carrier named at the signature block or letterhead); " +
+    "signingCapacity: the capacity in which it was signed, copied as written (e.g. 'as carrier', 'as agent for the carrier', 'master', 'freight forwarder').",
   insurance:
     "currency: 3-letter ISO code of the insured amount; amount: the sum insured as a plain number with '.' decimal; " +
     "date: the date of issue (or the date cover starts) as YYYY-MM-DD.",
@@ -143,7 +145,13 @@ export function toInvoiceData(r: ExtractionResult): InvoiceData {
 
 export function toTransportData(r: ExtractionResult): TransportDocData {
   const f = r.fields;
-  return { shipmentDate: f.shipmentDate?.value, portOfLoading: f.portOfLoading?.value, portOfDischarge: f.portOfDischarge?.value };
+  return {
+    shipmentDate: f.shipmentDate?.value,
+    portOfLoading: f.portOfLoading?.value,
+    portOfDischarge: f.portOfDischarge?.value,
+    issuerName: f.issuerName?.value,
+    signingCapacity: f.signingCapacity?.value,
+  };
 }
 
 export function toInsuranceData(r: ExtractionResult): InsuranceData {
