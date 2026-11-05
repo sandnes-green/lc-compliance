@@ -2,8 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import type { DatabaseSync as DatabaseSyncType } from "node:sqlite";
 import { plainCipher, type Cipher } from "./cipher";
-import { allRules, AppError, buildCustomRules, customRuleId, parseMt700, RULESET_VERSION, runRules } from "@lc/core";
-import type { CheckItem, CheckItemDraft, CheckItemSource, CheckStatus, ExtractionResult, Finding, LetterOfCredit, LlmCallRecord, LlmMessage, PresentedText, Presentation, RunResult } from "@lc/core";
+import { allRules, AppError, buildCarrierBlRule, buildCountryRiskRule, buildCustomRules, customRuleId, parseMt700, RULESET_VERSION, runRules, STARTER_COUNTRY_RULES } from "@lc/core";
+import type { CheckItem, CheckItemDraft, CheckItemSource, CheckStatus, CountryRequirement, CountryRule, CountryRuleDraft, ExtractionResult, Finding, LetterOfCredit, LlmCallRecord, LlmMessage, PresentedText, Presentation, RunResult } from "@lc/core";
 
 export { RULESET_VERSION };
 
@@ -173,6 +173,17 @@ CREATE TABLE IF NOT EXISTS check_items (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS country_rules (
+  id TEXT PRIMARY KEY,
+  country_code TEXT NOT NULL,
+  level TEXT NOT NULL,
+  requirements_json TEXT NOT NULL,
+  note TEXT NOT NULL,
+  enabled INTEGER NOT NULL,
+  reviewed INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -201,6 +212,7 @@ export const SECRET_COLUMNS = {
   documents: ["file_name", "text", "extraction_json"],
   manuals: ["name", "file_name", "text"],
   check_items: ["title", "requirement", "text_match_json", "source_manual_name", "source_quote"],
+  country_rules: ["requirements_json", "note"],
   llm_log: ["messages_json", "response"],
   audit_log: ["detail_json"],
 } as const;
@@ -231,6 +243,7 @@ export class CaseStore {
       this.db.exec(SCHEMA);
       this.migrate();
       this.initEncryption();
+      this.seedCountryRules();
     } catch (e) {
       // 打不开（密钥缺失/不对、迁移失败等）时必须释放文件句柄，否则在 Windows 上文件会一直被占用，无法替换或恢复
       this.db.close();
@@ -414,7 +427,8 @@ export class CaseStore {
     const c = this.getCase(caseId);
     if (!c) throw notFound(caseId);
     const items = this.listCheckItems().filter((i) => i.status === "enabled");
-    const result = runRules([...allRules, ...buildCustomRules(items)], { lc: c.lc, presentation: c.presentation, documents: this.listDocumentTexts(caseId) });
+    const countryRules = this.listCountryRules();
+    const result = runRules([...allRules, buildCountryRiskRule(countryRules), buildCarrierBlRule(countryRules), ...buildCustomRules(items)], { lc: c.lc, presentation: c.presentation, documents: this.listDocumentTexts(caseId) });
 
     // 合并 AI 判断类检查项的结果
     const ORDER = { discrepancy: 0, risk: 1, doubt: 2, info: 3 } as const;
@@ -730,6 +744,69 @@ export class CaseStore {
 
   private requireItem(id: string): void {
     if (!this.db.prepare("SELECT 1 FROM check_items WHERE id = ?").get(id)) throw new AppError("checkItem.notFound", `检查项不存在：${id}`, { id });
+  }
+
+  /** 首次打开时写入起步清单；用 meta 标记，用户删光后不会再次出现 */
+  private seedCountryRules(): void {
+    if (this.getMeta("country_rules_seeded") === "1") return;
+    this.tx(() => {
+      for (const d of STARTER_COUNTRY_RULES) this.insertCountryRule(d);
+      this.setMeta("country_rules_seeded", "1");
+    });
+  }
+
+  private insertCountryRule(d: CountryRuleDraft): string {
+    const id = randomUUID();
+    const now = new Date().toISOString();
+    this.db
+      .prepare("INSERT INTO country_rules (id,country_code,level,requirements_json,note,enabled,reviewed,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)")
+      .run(id, d.countryCode, d.level, this.seal("country_rules", "requirements_json", JSON.stringify(d.requirements)), this.seal("country_rules", "note", d.note), d.enabled ? 1 : 0, d.reviewed ? 1 : 0, now, now);
+    return id;
+  }
+
+  listCountryRules(): CountryRule[] {
+    return (this.db.prepare("SELECT * FROM country_rules ORDER BY created_at, rowid").all() as Row[]).map((r) => ({
+      id: r.id as string,
+      countryCode: r.country_code as string,
+      level: r.level as CountryRule["level"],
+      requirements: this.openJson<CountryRequirement[]>("country_rules", "requirements_json", r.requirements_json) ?? [],
+      note: this.open("country_rules", "note", r.note) ?? "",
+      enabled: r.enabled === 1,
+      reviewed: r.reviewed === 1,
+    }));
+  }
+
+  /** 调用方须已用 parseCountryRuleDraft 校验 */
+  addCountryRule(d: CountryRuleDraft): CountryRule {
+    let id = "";
+    this.tx(() => {
+      id = this.insertCountryRule(d);
+      this.audit("countryRule.add", null, { id, countryCode: d.countryCode });
+    });
+    return this.listCountryRules().find((r) => r.id === id)!;
+  }
+
+  updateCountryRule(id: string, d: CountryRuleDraft): CountryRule {
+    this.requireCountryRule(id);
+    this.tx(() => {
+      this.db
+        .prepare("UPDATE country_rules SET country_code=?,level=?,requirements_json=?,note=?,enabled=?,reviewed=?,updated_at=? WHERE id=?")
+        .run(d.countryCode, d.level, this.seal("country_rules", "requirements_json", JSON.stringify(d.requirements)), this.seal("country_rules", "note", d.note), d.enabled ? 1 : 0, d.reviewed ? 1 : 0, new Date().toISOString(), id);
+      this.audit("countryRule.update", null, { id, countryCode: d.countryCode });
+    });
+    return this.listCountryRules().find((r) => r.id === id)!;
+  }
+
+  deleteCountryRule(id: string): void {
+    this.requireCountryRule(id);
+    this.tx(() => {
+      this.db.prepare("DELETE FROM country_rules WHERE id = ?").run(id);
+      this.audit("countryRule.delete", null, { id });
+    });
+  }
+
+  private requireCountryRule(id: string): void {
+    if (!this.db.prepare("SELECT 1 FROM country_rules WHERE id = ?").get(id)) throw new AppError("countryRule.notFound", `国别规则不存在：${id}`, { id });
   }
 
   /** 记录与具体案件无关的审计事件（如设置变更）；detail 中不得包含密钥或单据正文 */

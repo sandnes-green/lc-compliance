@@ -114,6 +114,7 @@ describe("加密存储", () => {
       documents: ["id", "case_id", "doc_type", "source_kind", "chars", "needs_ocr", "created_at", "extracted_at", "ocr_confidence"],
       manuals: ["id", "source_kind", "chars", "ocr_confidence", "created_at"],
       check_items: ["id", "kind", "scope", "severity", "source_manual_id", "status", "origin", "created_at", "updated_at"],
+      country_rules: ["id", "country_code", "level", "enabled", "reviewed", "created_at", "updated_at"],
       llm_log: ["id", "at", "provider", "model", "case_id", "attempt", "outcome"],
       audit_log: ["id", "at", "action", "case_id", "hash"],
       settings: ["key", "value"],
