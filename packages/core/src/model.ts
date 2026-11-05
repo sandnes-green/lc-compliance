@@ -51,6 +51,9 @@ export interface TransportDocData {
   shipmentDate?: IsoDate;
   portOfLoading?: string;
   portOfDischarge?: string;
+  /** 提单签发人名称，以及签章处的签发身份（as carrier / as agent for the carrier / master 等） */
+  issuerName?: string;
+  signingCapacity?: string;
 }
 
 export interface InsuranceData {

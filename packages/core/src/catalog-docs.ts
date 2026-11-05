@@ -127,4 +127,12 @@ export const DOC_CATALOG: Record<string, Entry> = {
     zh: { message: "未能从 52A 识别开证行所在国家，国别规则未检查", suggestion: "请人工确认开证行所在国家，并对照“国别规则”。" },
     en: { message: "The issuing bank country could not be read from field 52A, so country rules were not checked", suggestion: "Confirm the issuing bank country manually and compare it with the country rules." },
   },
+  "carrierBl.forwarder": {
+    zh: { message: "要求提交船东单（来源：{sourceZh}），但提单的签发人看起来是货代：{issuer}", suggestion: "货代提单（House B/L）可能被银行当作不符点。请改用船公司（承运人）签发的提单，或在发运前要求申请人修改该条款。" },
+    en: { message: "A carrier-issued bill of lading is required (source: {sourceEn}), but the issuer looks like a forwarder: {issuer}", suggestion: "A forwarder (house) bill of lading may be refused by the bank. Use a bill of lading issued by the shipping line (carrier), or ask the applicant to amend the clause before shipment." },
+  },
+  "carrierBl.confirm": {
+    zh: { message: "要求提交船东单（来源：{sourceZh}），但无法确认提单是否由承运人签发（当前记录：{issuer}）", suggestion: "请对照提单签章确认签发人和签发身份（as carrier / master 等），并把它们录入运输单据数据。" },
+    en: { message: "A carrier-issued bill of lading is required (source: {sourceEn}), but it cannot be confirmed that the bill was issued by the carrier (recorded: {issuer})", suggestion: "Check the signature block of the bill of lading for the issuer and capacity (as carrier / master, etc.) and enter them in the transport document data." },
+  },
 };
