@@ -32,7 +32,7 @@ npm run dist -w @lc/desktop
 
 | 文件 / 目录 | 内容 |
 |---|---|
-| `lc.db` | 加密数据库（SQLite，敏感列为 AES-256-GCM 密文） |
+| `lc.db` | 加密数据库（SQLite，敏感列为 AES-256-GCM 密文）；含国别规则表 `country_rules`（备注与要求为密文），随数据库一起备份与恢复 |
 | `keystore.json` | 数据密钥，**经 Windows DPAPI 加密**，只有同一个 Windows 用户能解开 |
 | `backups\auto\` | 自动本地快照（每天首次启动后一份，默认保留 7 份） |
 | `backups\pre-restore-*` | 恢复备份时被替换下来的原有数据，及对应的旧密钥文件 |

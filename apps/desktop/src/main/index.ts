@@ -477,7 +477,7 @@ async function smokeSecurity(win: BrowserWindow): Promise<Record<string, unknown
   const saveDir = mkdtempSync(join(tmpdir(), "lc-smoke-sec-"));
   process.env.LC_SMOKE_SAVE_DIR = saveDir;
   const raw = (f: string) => (existsSync(f) ? readFileSync(f) : Buffer.alloc(0));
-  const MARKS = ["SMOKE-SECRET-CASE-9981", "SEC-REF-7741"];
+  const MARKS = ["SMOKE-SECRET-CASE-9981", "SEC-REF-7741", "SMOKE-COUNTRY-NOTE-5523"];
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   /** 需要人工查看界面时：LC_SMOKE_SHOT=目录 */
   const shot = async (name: string) => {
@@ -495,6 +495,9 @@ async function smokeSecurity(win: BrowserWindow): Promise<Record<string, unknown
     out.setup = await exec(`(async () => {
       const r = {};
       const c = await window.lc.createCase({ name: "SMOKE-SECRET-CASE-9981", lcText: ":20:SEC-REF-7741\\n:32B:USD1,00" });
+      // 国别规则的备注同样以密文落盘（磁盘字节检查见下方）
+      const cr = await window.lc.saveCountryRule(null, { countryCode: "QQ", level: "notice", requirements: [], note: "SMOKE-COUNTRY-NOTE-5523", enabled: true, reviewed: false });
+      r.countryNoteSaved = cr.ok;
       const st = (await window.lc.getSecurityStatus()).data;
       r.encrypted = st.encrypted;
       r.autoEnabledByDefault = st.auto.enabled;
@@ -791,6 +794,31 @@ async function smoke(win: BrowserWindow): Promise<void> {
     out.kbEditorOpens = /检查方式/.test(modal3) && /关键词/.test(modal3) && /匹配方式/.test(modal3);
     return out;
   })()`;
+  // 国别规则与船东单端到端：52A 国家命中、规则保存校验、货代签发的提单被列为疑点（均为合成数据）
+  const countryLc = [
+    ":20:CTRY1", ":40A:IRREVOCABLE", ":31D:241030SHANGHAI", ":32B:USD100000,00", ":44C:241020",
+    ":52A:TESTBDDHXXX", ":59:SANDNES TRADING CO LTD", ":45A:1000 SETS OF WIDGETS MODEL X",
+    ":47A:+B/L MUST BE ISSUED BY THE CARRIER",
+  ].join("\n");
+  const countryScript = `(async () => {
+    const r = {};
+    const c = await window.lc.createCase({ name: "country", lcText: ${JSON.stringify(countryLc)} });
+    const id = c.data.id;
+    const lcOnly = await window.lc.runCase(id);
+    const hit = lcOnly.data.findings.find((f) => f.code === "country.hit");
+    r.countryHit = { found: !!hit, ruleId: hit?.ruleId ?? null };
+    const draft = { countryCode: "zz", level: "notice", requirements: [], note: "synthetic", enabled: true, reviewed: false };
+    const okSave = await window.lc.saveCountryRule(null, draft);
+    r.savedCode = okSave.ok ? okSave.data.countryCode : okSave.error;
+    const bad = await window.lc.saveCountryRule(null, { ...draft, countryCode: "ZZZ" });
+    r.badCodeRejected = bad.ok === false && bad.code === "countryRule.invalid";
+    if (okSave.ok) await window.lc.deleteCountryRule(okSave.data.id);
+    await window.lc.savePresentation(id, { presentationDate: "2024-10-25", transport: { shipmentDate: "2024-10-10", signingCapacity: "freight forwarder" } });
+    const full = await window.lc.runCase(id);
+    r.forwarderFlagged = full.data.findings.some((f) => f.code === "carrierBl.forwarder");
+    await window.lc.deleteCase(id);
+    return r;
+  })()`;
   const docScript = `(async () => {
     const r = {};
     const c = await window.lc.createCase({ name: "docs", lcText: ":20:D1\\n:32B:USD100000,00" });
@@ -831,6 +859,7 @@ async function smoke(win: BrowserWindow): Promise<void> {
     process.env.LC_SMOKE_FILE = join(smokeFixtureDir, "invoice.pdf");
     kb.importedInvoice = await win.webContents.executeJavaScript(kbImportScript(kb.caseId, "invoice"));
     kb.run = await win.webContents.executeJavaScript(kbRunScript(kb.caseId));
+    const country = await win.webContents.executeJavaScript(countryScript);
     const report = await smokeReport(win);
     await setLangAndReload(win);
     const ui = await win.webContents.executeJavaScript(uiScript);
@@ -843,7 +872,7 @@ async function smoke(win: BrowserWindow): Promise<void> {
     // 安全阶段放在最后：其中的「恢复」会替换整个数据库，之后不再有其他阶段依赖旧连接
     const guide = await smokeGuide(win);
     const security = await smokeSecurity(win);
-    console.log("SMOKE_RESULT " + JSON.stringify({ guide, security, kb, kbUi, ocr: ocrResult, report, rules, ui, docs, zh, zhMenu, en, enMenu }));
+    console.log("SMOKE_RESULT " + JSON.stringify({ guide, security, kb, kbUi, country, ocr: ocrResult, report, rules, ui, docs, zh, zhMenu, en, enMenu }));
     app.exit(0);
   } catch (e) {
     console.log("SMOKE_FAIL " + (e instanceof Error ? e.message : String(e)));
