@@ -1,4 +1,4 @@
-import { AppError, LlmError, parseCheckItemDraft, type CheckItemDraft, type CheckStatus } from "@lc/core";
+import { AppError, LlmError, parseCheckItemDraft, parseCountryRuleDraft, type CheckItemDraft, type CheckStatus, type CountryRuleDraft } from "@lc/core";
 import { AiService, extractCheckItems, getOcrLangs, importDocument, importManual, MAX_DOC_BYTES, migrateLegacyData, OCR_LANG_CHOICES, runCaseWithChecks, saveOcrLangs, UpdateService, type SecretBox } from "@lc/services";
 import type { CaseStore } from "@lc/storage";
 import { app, BrowserWindow, dialog, ipcMain, Menu, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
@@ -135,6 +135,13 @@ function validDraft(raw: unknown): CheckItemDraft {
   return r.draft;
 }
 
+/** 国别规则同样重新校验，失败时带上出错的字段 */
+function validCountryDraft(raw: unknown): CountryRuleDraft {
+  const r = parseCountryRuleDraft(raw);
+  if (!r.ok) throw new AppError("countryRule.invalid", `国别规则内容无效：${r.error}`, { field: r.error });
+  return r.draft;
+}
+
 /** 弹出文件选择框上传手册；冒烟自检时可经环境变量跳过对话框 */
 async function importManualFromDialog(e: IpcMainInvokeEvent) {
   const d = DIALOG_TEXT[language];
@@ -235,6 +242,9 @@ function registerIpc(): void {
     store.setCheckItemStatus(ids, status as CheckStatus);
   });
   handle("deleteCheckItem", (_e, id) => store.deleteCheckItem(str(id, "id")));
+  handle("listCountryRules", () => store.listCountryRules());
+  handle("saveCountryRule", (_e, id, draft) => (id === null ? store.addCountryRule(validCountryDraft(draft)) : store.updateCountryRule(str(id, "id"), validCountryDraft(draft))));
+  handle("deleteCountryRule", (_e, id) => store.deleteCountryRule(str(id, "id")));
   handle("getAiSettings", () => ai.getSettings());
   handle("saveAiSettings", (_e, input) => {
     if (!input || typeof input !== "object") throw new AppError("ipc.invalidParam", "参数无效：settings", { what: "settings" });

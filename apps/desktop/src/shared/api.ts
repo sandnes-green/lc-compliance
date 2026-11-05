@@ -1,8 +1,8 @@
-import type { CheckItem, CheckItemDraft, CheckStatus, ExtractionResult, Lang, Presentation } from "@lc/core";
+import type { CheckItem, CheckItemDraft, CheckStatus, CountryRule, CountryRuleDraft, ExtractionResult, Lang, Presentation } from "@lc/core";
 import type { AiSettings, AiSettingsInput, ExtractCheckItemsResult, LockReason, Policy, PolicyWarning, UpdateState } from "@lc/services";
 import type { CaseRecord, CaseSummary, DocKind, DocumentRecord, LlmLogEntry, ManualRecord, RunRecord } from "@lc/storage";
 
-export type { LockReason, Policy, PolicyWarning, UpdateState, AiSettings, AiSettingsInput, CheckItem, CheckItemDraft, CheckStatus, ExtractCheckItemsResult, ManualRecord, CaseRecord, CaseSummary, DocKind, DocumentRecord, ExtractionResult, LlmLogEntry, Presentation, RunRecord };
+export type { LockReason, Policy, PolicyWarning, UpdateState, AiSettings, AiSettingsInput, CheckItem, CheckItemDraft, CheckStatus, CountryRule, CountryRuleDraft, ExtractCheckItemsResult, ManualRecord, CaseRecord, CaseSummary, DocKind, DocumentRecord, ExtractionResult, LlmLogEntry, Presentation, RunRecord };
 export type Language = Lang;
 
 export type Result<T> =
@@ -126,6 +126,9 @@ export interface LcInvokeApi {
   updateCheckItem(id: string, draft: CheckItemDraft): Promise<Result<CheckItem>>;
   setCheckItemsStatus(ids: string[], status: CheckStatus): Promise<Result<null>>;
   deleteCheckItem(id: string): Promise<Result<null>>;
+  listCountryRules(): Promise<Result<CountryRule[]>>;
+  saveCountryRule(id: string | null, draft: CountryRuleDraft): Promise<Result<CountryRule>>;
+  deleteCountryRule(id: string): Promise<Result<null>>;
 
   getStartupState(): Promise<Result<StartupState>>;
   getAppInfo(): Promise<Result<AppInfo>>;
@@ -200,6 +203,9 @@ export const CHANNELS = [
   "updateCheckItem",
   "setCheckItemsStatus",
   "deleteCheckItem",
+  "listCountryRules",
+  "saveCountryRule",
+  "deleteCountryRule",
   "getStartupState",
   "getAppInfo",
   "quitApp",
