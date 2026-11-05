@@ -5,6 +5,9 @@ export interface LetterOfCredit {
   reference: string;
   /** 40A：信用证类型，如 IRREVOCABLE */
   form?: string;
+  /** 52A：开证行 BIC 及其第 5、6 位国家代码；52D 等无 BIC 的写法读不出，保持为空 */
+  issuingBankBic?: string;
+  issuingCountry?: string;
   issueDate?: IsoDate;
   expiryDate?: IsoDate;
   expiryPlace?: string;
