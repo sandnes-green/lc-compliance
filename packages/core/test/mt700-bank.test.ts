@@ -10,6 +10,14 @@ describe("52A 开证行", () => {
   it("跳过首行 /账号 或 /D/ 标识", () => {
     expect(parseBank("/D/12345\nTESTBDDHXXX")).toEqual({ bic: "TESTBDDHXXX", country: "BD" });
   });
+  it("小写 BIC 转大写后识别", () => {
+    expect(parseBank("testbddh")).toEqual({ bic: "TESTBDDH", country: "BD" });
+    expect(parseBank("/D/1\ntestbddhxxx")).toEqual({ bic: "TESTBDDHXXX", country: "BD" });
+  });
+  it("52D 式自由文本（名称加地址，无 BIC）返回空", () => {
+    expect(parseBank("SOME BANK LTD\n12 MAIN STREET\nDHAKA")).toEqual({});
+    expect(parseBank("some bank ltd\ntestbddh branch")).toEqual({});
+  });
   it("无法识别时返回空，不猜", () => {
     expect(parseBank(undefined)).toEqual({});
     expect(parseBank("SOME BANK LTD\nDHAKA")).toEqual({});

@@ -53,8 +53,10 @@ export function parseBank(field?: string): { bic?: string; country?: string } {
     .map((l) => l.trim())
     .filter((l) => l !== "" && !l.startsWith("/"))
     .pop();
-  const m = line ? BIC.exec(line) : null;
-  return m ? { bic: line, country: m[1] } : {};
+  // 大小写不敏感，但原行必须只由字母数字组成（含空格的自由文本一律不认）
+  const bic = line && /^[A-Za-z0-9]+$/.test(line) ? line.toUpperCase() : undefined;
+  const m = bic ? BIC.exec(bic) : null;
+  return m ? { bic, country: m[1] } : {};
 }
 
 export class Mt700Error extends AppError {}

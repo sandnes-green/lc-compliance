@@ -23,7 +23,7 @@ export function buildCountryRiskRule(rules: CountryRule[]): LcRule {
             severity: "info",
             code: "country.unknown",
             params: {},
-            evidence: [{ document: "lc", field: "52A", value: lc.raw["52A"] ?? "" }],
+            evidence: lc.raw["52A"] ? [{ document: "lc", field: "52A", value: lc.raw["52A"] }] : [],
           }),
         ];
       }

@@ -39,6 +39,12 @@ describe("LCR-COUNTRY-RISK", () => {
     const f = run([rule()], lcOf()).findings[0]!;
     expect(f.code).toBe("country.unknown");
     expect(f.severity).toBe("info");
+    expect(f.evidence).toEqual([]);
+  });
+  it("没有任何空值证据行", () => {
+    for (const lc of [lcOf(), lcOf("TESTBDDHXXX")]) {
+      for (const f of run([rule({ note: "" })], lc).findings) expect(f.evidence.every((e) => e.value !== "")).toBe(true);
+    }
   });
   it("表里没有任何启用的规则：不出任何提示", () => {
     expect(run([], lcOf()).findings).toEqual([]);
