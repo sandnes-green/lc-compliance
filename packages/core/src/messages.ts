@@ -1,6 +1,7 @@
 import type { Finding } from "./model";
 import { CUSTOM_CATALOG } from "./catalog-custom";
 import { DOC_CATALOG } from "./catalog-docs";
+import { LC_EXTRA_CATALOG } from "./catalog-lc-extra";
 
 export type Lang = "zh" | "en";
 
@@ -61,7 +62,7 @@ const BASE_CATALOG: Record<string, Record<Lang, Text>> = {
   },
 };
 
-const CATALOG: Record<string, Record<Lang, Text>> = { ...BASE_CATALOG, ...DOC_CATALOG, ...CUSTOM_CATALOG };
+const CATALOG: Record<string, Record<Lang, Text>> = { ...BASE_CATALOG, ...DOC_CATALOG, ...LC_EXTRA_CATALOG, ...CUSTOM_CATALOG };
 
 const fill = (tpl: string, params: Finding["params"]) =>
   tpl.replace(/\{(\w+)\}/g, (_, k: string) => (k in params ? String(params[k]) : `{${k}}`));

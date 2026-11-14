@@ -18,6 +18,10 @@ export const RULE_TITLES: Record<string, Record<Lang, string>> = {
   "UCP600-18C-GOODS": { zh: "发票货物描述", en: "Invoice goods description" },
   "UCP600-28-INSURANCE": { zh: "保险单币种、金额与日期", en: "Insurance currency, amount & date" },
   "UCP600-20A-PORTS": { zh: "装运港与卸货港", en: "Ports of loading & discharge" },
+  "LCR-TOLERANCE": { zh: "金额与数量容差", en: "Amount and quantity tolerance" },
+  "LCR-PARTIAL-TRANSHIP": { zh: "分批装运与转运", en: "Partial shipments and transhipment" },
+  "LCR-PRESENTATION-CONFLICT": { zh: "交单期与到期日是否被重复规定", en: "Presentation period and expiry stated twice" },
+  "LCR-FORM-RULES": { zh: "信用证类型与适用规则", en: "Form of credit and applicable rules" },
   "LCR-COUNTRY-RISK": { zh: "国别风险提示", en: "Country risk notice" },
   "UCP600-20-CARRIER-BL": { zh: "船东单（承运人签发提单）", en: "Carrier-issued bill of lading" },
 };

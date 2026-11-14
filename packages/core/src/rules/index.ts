@@ -1,6 +1,7 @@
 import type { Rule } from "../model";
 import { documentRules } from "./documents";
 import { draftReviewRules } from "./draftReview";
+import { lcExtraRules } from "./lcExtra";
 import { lcReviewRules } from "./lcReview";
 import { ucp600Rules } from "./ucp600";
 
@@ -8,13 +9,14 @@ export * from "./ucp600";
 export * from "./documents";
 export * from "./lcReview";
 export * from "./draftReview";
+export * from "./lcExtra";
 export * from "./titles";
 export * from "./custom";
 export * from "./countryRisk";
 export * from "./carrierBl";
 
 /** 全部内置规则：先审证，再审单 */
-export const allRules: Rule[] = [...lcReviewRules, ...draftReviewRules, ...ucp600Rules, ...documentRules];
+export const allRules: Rule[] = [...lcReviewRules, ...draftReviewRules, ...lcExtraRules, ...ucp600Rules, ...documentRules];
 
 /** 规则库版本：规则内容变化时递增，随每次审查结果落库，便于追溯 */
-export const RULESET_VERSION = "builtin-0.4.0";
+export const RULESET_VERSION = "builtin-0.5.0";
