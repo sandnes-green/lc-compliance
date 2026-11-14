@@ -118,7 +118,7 @@ export default function CaseView({ caseId, initialTab = "lc", unwrap, onChanged 
                 <Descriptions.Item label={t("lc.reference")}>{lc.reference}</Descriptions.Item>
                 <Descriptions.Item label={t("lc.issueDate")}>{lc.issueDate ?? dash}</Descriptions.Item>
                 <Descriptions.Item label={t("lc.amount")}>
-                  {lc.currency} {lc.amount.toLocaleString(lang === "zh" ? "zh-CN" : "en-US")}
+                  {lc.currency} {lc.amountMasked ? (lang === "zh" ? "（草稿未填写）" : "(not filled in the draft)") : lc.amount.toLocaleString(lang === "zh" ? "zh-CN" : "en-US")}
                 </Descriptions.Item>
                 <Descriptions.Item label={t("lc.tolerance")}>{lc.tolerance ? `+${lc.tolerance.plus}% / -${lc.tolerance.minus}%` : t("lc.none")}</Descriptions.Item>
                 <Descriptions.Item label={t("lc.expiry")}>
@@ -352,7 +352,7 @@ function FindingCard({ f }: { f: RunRecord["findings"][number] }) {
         <Table
           size="small"
           pagination={false}
-          rowKey={(e) => `${e.document}-${e.field}`}
+          rowKey={(e) => `${e.document}-${e.field}-${f.evidence.indexOf(e)}`}
           dataSource={f.evidence}
           columns={[
             { title: t("col.source"), dataIndex: "document", render: (d: string) => t(`doc.${d}`) },

@@ -96,7 +96,12 @@ function lcFacts(lc: LetterOfCredit, s: ReportStrings, lang: Lang): [string, str
     [f.reference, lc.reference],
     [f.form, lc.form],
     [f.issueDate, lc.issueDate],
-    [f.amount, `${lc.currency} ${lc.amount.toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { minimumFractionDigits: 2 })}`],
+    [
+      f.amount,
+      lc.amountMasked
+        ? `${lc.currency} ${lang === "zh" ? "（草稿未填写）" : "(not filled in the draft)"}`
+        : `${lc.currency} ${lc.amount.toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { minimumFractionDigits: 2 })}`,
+    ],
     [f.tolerance, lc.tolerance ? `+${lc.tolerance.plus}% / -${lc.tolerance.minus}%` : undefined],
     [f.expiry, [lc.expiryDate, lc.expiryPlace].filter(Boolean).join(" ") || undefined],
     [f.latestShipment, lc.latestShipmentDate],
