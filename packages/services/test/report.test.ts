@@ -88,7 +88,7 @@ describe("buildReport", () => {
 
   it("没有任何发现时措辞保守，不说「合规」", () => {
     const clean = make(
-      [":20:OK", ":31D:241130", ":32B:USD100000,00", ":44C:241001", ":50:ACME IMPORTS INC", ":59:SANDNES TRADING CO LTD", ":45A:WIDGETS"].join("\n"),
+      [":20:OK", ":40A:IRREVOCABLE", ":40E:UCP LATEST VERSION", ":31D:241130", ":32B:USD100000,00", ":44C:241001", ":50:ACME IMPORTS INC", ":59:SANDNES TRADING CO LTD", ":45A:WIDGETS"].join("\n"),
       { presentationDate: "2024-10-05", invoice: { currency: "USD", amount: 1000 }, transport: { shipmentDate: "2024-09-30" } },
     );
     const r = buildReport(clean.input("zh"));
