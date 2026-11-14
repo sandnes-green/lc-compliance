@@ -1,5 +1,5 @@
 import { AppError, LlmError, parseCheckItemDraft, parseCountryRuleDraft, type CheckItemDraft, type CheckStatus, type CountryRuleDraft } from "@lc/core";
-import { AiService, extractCheckItems, getOcrLangs, importDocument, importManual, MAX_DOC_BYTES, migrateLegacyData, OCR_LANG_CHOICES, runCaseWithChecks, saveOcrLangs, UpdateService, type SecretBox } from "@lc/services";
+import { AiService, extractCheckItems, extractFileText, getOcrLangs, importDocument, importManual, MAX_DOC_BYTES, migrateLegacyData, OCR_LANG_CHOICES, runCaseWithChecks, saveOcrLangs, UpdateService, type SecretBox } from "@lc/services";
 import type { CaseStore } from "@lc/storage";
 import { app, BrowserWindow, dialog, ipcMain, Menu, safeStorage, shell, type IpcMainInvokeEvent } from "electron";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
@@ -83,6 +83,7 @@ async function pickLcFile(e: IpcMainInvokeEvent): Promise<PickedFile | null> {
     title: d.openLc,
     properties: ["openFile" as const],
     filters: [
+      { name: d.lcFiles, extensions: ["pdf", "docx", "txt", "fin", "swi", "mt700", "out", "dat"] },
       { name: d.swift, extensions: ["txt", "fin", "swi", "mt700", "out", "dat"] },
       { name: d.all, extensions: ["*"] },
     ],
@@ -92,7 +93,19 @@ async function pickLcFile(e: IpcMainInvokeEvent): Promise<PickedFile | null> {
   if (res.canceled || !path) return null;
 
   const name = basename(path);
-  if ((await stat(path)).size > MAX_LC_FILE_BYTES) throw new AppError("file.tooLarge", `文件过大：${name}`, { name });
+  const size = (await stat(path)).size;
+
+  // PDF / Word：与导入单据走同一个提取器（按内容识别；没有文字层的扫描件会走 OCR）
+  if (/\.(pdf|docx)$/i.test(name)) {
+    if (size > MAX_DOC_BYTES) throw new AppError("doc.tooLarge", `文件过大：${name}`, { name, maxMb: MAX_DOC_BYTES / 1024 / 1024 });
+    const { doc } = await extractFileText(await readFile(path), name, ocr.runnerFor(name));
+    if (doc.needsOcr || doc.chars === 0) throw new AppError("doc.empty", `文件内容为空：${name}`, { name });
+    // 银行打印的信用证每页都有重复的页眉页脚，会混进字段正文，先去掉
+    const { stripPageNoise } = await import("@lc/docs");
+    return { name, text: doc.pages.length > 1 ? stripPageNoise(doc.pages) : doc.text };
+  }
+
+  if (size > MAX_LC_FILE_BYTES) throw new AppError("file.tooLarge", `文件过大：${name}`, { name });
   const buf = await readFile(path);
   if (buf.includes(0)) throw new AppError("file.notText", `不是文本文件：${name}`, { name });
   const text = buf.toString("utf8");

@@ -119,6 +119,58 @@ export const DOC_CATALOG: Record<string, Entry> = {
     zh: { message: "疑似软条款：检验证书与申请人有关 ——「{snippet}」", suggestion: SOFT_SUGGEST_ZH },
     en: { message: "Possible soft clause: the inspection certificate involves the applicant — “{snippet}”", suggestion: SOFT_SUGGEST_EN },
   },
+  "lc.burden.carrierCert": {
+    zh: { message: "要求承运人 / 船东出具证明 ——「{snippet}」", suggestion: "承运人通常不会出具适航等证明，出口商无法自行取得；发运前请申请人要求开证行删除该条款。" },
+    en: { message: "A certificate from the carrier or shipowner is required — “{snippet}”", suggestion: "Carriers rarely issue such certificates, so you cannot obtain one yourself; before shipping, ask the applicant to have the issuing bank delete the clause." },
+  },
+  "lc.burden.dispatchProof": {
+    zh: { message: "要求快递收据 / 电邮副本 / 发送证明随正本单据一并提交 ——「{snippet}」", suggestion: "这属于额外的随单文件，容易漏交成为不符点；建议删除，或至少把快递改为电邮并明确无需随正本提交。" },
+    en: { message: "A courier receipt, e-mail copy or dispatch proof must accompany the original documents — “{snippet}”", suggestion: "This is an extra accompanying document that is easy to miss and become a discrepancy; ask to delete it, or at least change courier to e-mail and drop the accompany requirement." },
+  },
+  "lc.burden.localAgentBl": {
+    zh: { message: "要求提单显示孟加拉船代 / 承运人的名称、地址、电话等 ——「{snippet}」", suggestion: "使用 Master B/L 时提单上没有这些信息，会形成不符点；请要求删除，或确认船公司的提单格式能满足。" },
+    en: { message: "The bill of lading must show the name, address and phone of the shipping agent or carrier in Bangladesh — “{snippet}”", suggestion: "A master B/L does not carry this information and would be discrepant; ask to delete the clause or confirm the shipping line's B/L format satisfies it." },
+  },
+  "lc.burden.docFormat": {
+    zh: { message: "对发票 / 装箱单版式提出了细节要求（表格列头、逐项分行等）——「{snippet}」", suggestion: "版式要求越细，单据越容易出现不符点；建议要求删除这类条款，以简化信用证条款。" },
+    en: { message: "Detailed layout requirements for the invoice or packing list (table columns, one row per item, etc.) — “{snippet}”", suggestion: "The more detailed the layout, the easier it is to slip into a discrepancy; ask to delete such clauses to keep the credit simple." },
+  },
+  "lc.spareParts": {
+    zh: { message: "货物描述里写明了备品及固定数量，且信用证没有「免费货物可接受」的约定 ——「{snippet}」", suggestion: "若随货另发免费备品，发票数量会与信用证不符；请先核对备品数量，并要求在 47A 增加“随附的免费备品可接受”。" },
+    en: { message: "The goods description states spare parts in a fixed quantity and the credit has no clause accepting free-of-charge goods — “{snippet}”", suggestion: "If you ship extra free spare parts the invoice quantity will not match the credit; confirm the spare-part quantity and ask for a field 47A clause accepting free-of-charge spare parts." },
+  },
+  "lc.dates.coverBeforeProforma": {
+    zh: { message: "保险暂保单日期 {cover} 早于形式发票日期 {proforma}", suggestion: "暂保单通常在形式发票之后出具；这多半是沿用了旧暂保单，请要求申请人核对暂保单号与日期。" },
+    en: { message: "The insurance cover note is dated {cover}, before the proforma invoice dated {proforma}", suggestion: "A cover note is normally issued after the proforma invoice; this often means an old cover note was reused — ask the applicant to check its number and date." },
+  },
+  "lc.dates.proformaAfterIssue": {
+    zh: { message: "形式发票日期 {proforma} 晚于开证日 {issue}", suggestion: "开证依据的形式发票应早于开证日；请核对形式发票日期是否写错。" },
+    en: { message: "The proforma invoice date {proforma} is after the issue date {issue}", suggestion: "The proforma invoice the credit relies on should predate issuance; check whether its date was written wrongly." },
+  },
+  "lc.dates.coverAfterIssue": {
+    zh: { message: "保险暂保单日期 {cover} 晚于开证日 {issue}", suggestion: "开证时暂保单应已存在；请核对暂保单日期。" },
+    en: { message: "The insurance cover note date {cover} is after the issue date {issue}", suggestion: "The cover note should already exist when the credit is issued; check its date." },
+  },
+  "lc.typo.letterO": {
+    zh: { message: "编号「{token}」中字母 O 紧挨着数字，疑似把数字 0 写成了字母 O（应为「{suggested}」？）", suggestion: "核对该编号是否与形式发票 / 合同一致；若是笔误，发运前请求修改，否则单据上的编号会与信用证不符。" },
+    en: { message: "In the reference “{token}” the letter O sits next to digits and may be a mistyped zero (should it be “{suggested}”?)", suggestion: "Check the reference against the proforma invoice or contract; if it is a typo, ask for an amendment before shipping, or the documents will not match the credit." },
+  },
+  "lc.typo.hyphenDecimal": {
+    zh: { message: "尺寸「{token}」用连字符代替了小数点，疑似应为「{suggested}」", suggestion: "核对规格；若是笔误，请要求更正，否则单据上的写法与信用证不一致。" },
+    en: { message: "The size “{token}” uses a hyphen where a decimal point is expected; it may be “{suggested}”", suggestion: "Check the specification; if it is a typo, ask for a correction, or the documents will not match the credit." },
+  },
+  "lc.typo.word": {
+    zh: { message: "「{token}」疑似拼写笔误（应为「{suggested}」？）", suggestion: "UCP600 第 14 条 d 款允许不影响含义的拼写差异，但货物描述里的错字仍建议更正，以免银行审单时产生争议。" },
+    en: { message: "“{token}” may be a spelling slip (should it be “{suggested}”?)", suggestion: "UCP 600 Art. 14(d) tolerates typos that do not change the meaning, but it is still safer to correct them in the goods description to avoid disputes at examination." },
+  },
+  "lc.dates.proformaStale": {
+    zh: { message: "形式发票日期 {proforma} 比开证日 {issue} 早了 {days} 天", suggestion: "间隔较长，请确认形式发票上的价格和条款仍然有效；必要时请申请人重新出具。" },
+    en: { message: "The proforma invoice dated {proforma} is {days} days older than the issue date {issue}", suggestion: "That is a long gap; confirm the prices and terms on the proforma invoice are still valid, and ask the applicant for a new one if needed." },
+  },
+  "lc.placeholder": {
+    zh: { message: "条款里仍有未填写的占位符 ——「{snippet}」", suggestion: "占位符（如 MC-XXXX、XXXX）须在正本中填成真实内容；请要求开证行补全后再备货。" },
+    en: { message: "An unfilled placeholder remains in the text — “{snippet}”", suggestion: "Placeholders such as MC-XXXX must be replaced with real values in the issued credit; ask the issuing bank to complete them before you prepare the goods." },
+  },
   "country.hit": {
     zh: { message: "开证行所在国家：{countryZh}（{country}）{stateZh}。该国的要求：{reqZh}。{note}", suggestion: "发运前对照这些要求逐项确认；国别规则由你们公司维护，可在“国别规则”中修改。" },
     en: { message: "Issuing bank country: {countryEn} ({country}){stateEn}. Requirements: {reqEn}. {note}", suggestion: "Check each requirement before shipping; the country rules are maintained by your company under “Country rules”." },

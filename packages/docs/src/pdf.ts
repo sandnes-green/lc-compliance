@@ -18,6 +18,43 @@ const LINE_TOLERANCE = 3;
 
 const nonSpace = (s: string) => s.replace(/\s/g, "").length;
 
+const HEADER_LINES = 6;
+const FOOTER_LINES = 8;
+/** 太短的行（如单个 "." 或 "AND"）不当作页眉页脚；"DHAKA" 这类 5 个字符的页眉要能去掉 */
+const MIN_NOISE_LEN = 5;
+
+/**
+ * 去掉每页重复的页眉页脚（如 CONFIDENTIAL、"149 SG REL.DATE=…"、"THIS CREDIT IS VALID ONLY…"、"PAGE 2/…"）。
+ * 只看每页开头 / 结尾几行，且同一行（数字视为同一个符号）在至少两页的同一区域出现才算噪声；
+ * 正文中恰好重复出现的行（如多处条款里相同的一行）不在页眉页脚区域，不会被误删。
+ */
+export function stripPageNoise(pages: string[]): string {
+  if (pages.length < 2) return pages.join("\n\n").trim();
+  const key = (l: string) => l.trim().replace(/\d+/g, "#");
+  const split = pages.map((p) => p.split("\n"));
+  const count = (zone: (lines: string[]) => string[]) => {
+    const n = new Map<string, number>();
+    for (const lines of split) for (const k of new Set(zone(lines).map(key))) n.set(k, (n.get(k) ?? 0) + 1);
+    return n;
+  };
+  const head = count((l) => l.slice(0, HEADER_LINES));
+  const foot = count((l) => l.slice(-FOOTER_LINES));
+  const noise = (k: string, seen: Map<string, number>) => k.length >= MIN_NOISE_LEN && (seen.get(k) ?? 0) >= 2;
+  return split
+    .map((lines) =>
+      lines
+        .filter((l, i) => {
+          const k = key(l);
+          const inHead = i < HEADER_LINES && noise(k, head);
+          const inFoot = i >= lines.length - FOOTER_LINES && noise(k, foot);
+          return !(inHead || inFoot);
+        })
+        .join("\n"),
+    )
+    .join("\n\n")
+    .trim();
+}
+
 export function extractPlainText(raw: string): ExtractedDocument {
   const text = raw.replace(/\r\n?/g, "\n").trim();
   const chars = nonSpace(text);

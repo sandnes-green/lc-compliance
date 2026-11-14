@@ -12,7 +12,9 @@ export interface LetterOfCredit {
   expiryDate?: IsoDate;
   expiryPlace?: string;
   currency: string;
+  /** 草稿里金额未填（如 USDXXXXX,XX）时为 0，同时 amountMasked 为 true；此时与金额有关的检查不可信 */
   amount: number;
+  amountMasked?: boolean;
   /** 39A：金额上下浮动百分比 */
   tolerance?: { plus: number; minus: number };
   latestShipmentDate?: IsoDate;
