@@ -202,6 +202,98 @@ export function parseBank(field?: string): { bic?: string; country?: string } {
   return m ? { bic, country: m[1] } : {};
 }
 
+// ───────────── 开证行所在国家 ─────────────
+// MT700 里 52a 是可选字段：开证行就是报文发送方时通常不写 52A，开证行只出现在报文头（Sender）里。
+// 依次尝试：52A 的 BIC → 52D 里的 BIC / 国家名 → 报文头的发送方 BIC → 申请人（50）地址里的国家名（推断）。
+
+export type IssuingCountrySource = "52A" | "52D" | "header" | "applicant";
+
+let regionCheck: Intl.DisplayNames | undefined;
+function isRegion(code: string): boolean {
+  try {
+    regionCheck ??= new Intl.DisplayNames(["en"], { type: "region", fallback: "none" });
+    return regionCheck.of(code) !== undefined;
+  } catch {
+    return true;
+  }
+}
+
+/** 地址里常见的国家写法 → 国家代码。Intl 的英文国名之外，补上常见别称与几个主要城市 */
+const COUNTRY_ALIASES: Record<string, string> = {
+  USA: "US", "U.S.A": "US", "UNITED STATES": "US", UK: "GB", "U.K": "GB", "UNITED KINGDOM": "GB", "GREAT BRITAIN": "GB",
+  UAE: "AE", "U.A.E": "AE", "UNITED ARAB EMIRATES": "AE", TURKEY: "TR", TURKIYE: "TR", VIETNAM: "VN", "VIET NAM": "VN",
+  "SOUTH KOREA": "KR", KOREA: "KR", "HONG KONG": "HK", HONGKONG: "HK", RUSSIA: "RU", IRAN: "IR", SYRIA: "SY", LAOS: "LA",
+  "CZECH REPUBLIC": "CZ", "IVORY COAST": "CI", BURMA: "MM", MACAU: "MO", MACAO: "MO", TAIWAN: "TW", "P.R. CHINA": "CN", PRC: "CN",
+  DHAKA: "BD", CHITTAGONG: "BD", CHATTOGRAM: "BD", KARACHI: "PK", LAHORE: "PK", ISTANBUL: "TR", COLOMBO: "LK",
+};
+
+const escapeName = (name: string) => name.replace(/\./g, "\\.?").replace(/ /g, "\\s+");
+
+let countryNames: [RegExp, string][] | undefined;
+function countryNameTable(): [RegExp, string][] {
+  if (countryNames) return countryNames;
+  const map = new Map<string, string>(Object.entries(COUNTRY_ALIASES));
+  try {
+    const dn = new Intl.DisplayNames(["en"], { type: "region", fallback: "none" });
+    for (let a = 65; a <= 90; a++) {
+      for (let b = 65; b <= 90; b++) {
+        const code = String.fromCharCode(a, b);
+        const name = dn.of(code)?.toUpperCase();
+        // 只收纯字母国名（"Hong Kong SAR China" 之类由别称表负责）
+        if (name && /^[A-Z ]+$/.test(name) && !map.has(name)) map.set(name, code);
+      }
+    }
+  } catch {
+    /* 运行环境不支持 Intl.DisplayNames 时只用别称表 */
+  }
+  countryNames = [...map].map(([name, code]) => [new RegExp(`(?<![A-Z])${escapeName(name)}\\.?(?![A-Z])`, "g"), code]);
+  return countryNames;
+}
+
+/** 自由文本（地址）里最后出现的国家名：地址的国家一般写在最后 */
+export function countryFromText(text?: string): string | undefined {
+  if (!text) return undefined;
+  const upper = text.toUpperCase();
+  let best: { at: number; code: string } | undefined;
+  for (const [re, code] of countryNameTable()) {
+    for (const m of upper.matchAll(re)) if (!best || m.index > best.at) best = { at: m.index, code };
+  }
+  return best?.code;
+}
+
+/** 自由文本里带 SWIFT / BIC 标签的代码（不带标签的 8 位单词如 HOLDINGS 会被误认成 BIC，故不收） */
+const BIC_IN_TEXT = /\b(?:SWIFT|BIC)(?:\s*(?:CODE|ADDRESS))?\s*[:：]?\s*([A-Z]{4}([A-Z]{2})[A-Z0-9]{2}(?:[A-Z0-9]{3})?)(?![A-Z0-9])/g;
+
+/** 报文头里的发送方：{2:O700hhmmYYMMDD<发送方 LT>…}，或打印件上的 "Sender: XXXXBDDH…" */
+export function headerSenderBic(message: string): string | undefined {
+  const firstTag = /(?:^|\n)\s*:\d{2}[A-Z]?:/.exec(message);
+  const head = firstTag ? message.slice(0, firstTag.index) : message.slice(0, 2000);
+  const out = /\{2:O\d{3}\d{10}([A-Z]{6}[A-Z0-9]{2})/.exec(head);
+  if (out && isRegion(out[1]!.slice(4, 6))) return out[1];
+  const lab = /\b(?:SENDER|SENDING\s+(?:BANK|INSTITUTION)|ISSUING\s+BANK|ISSUER)\b[^\n:：]{0,30}[:：]?\s*([A-Za-z]{6}[A-Za-z0-9]{2})(?:[A-Za-z]?[A-Za-z0-9]{3})?(?![A-Za-z0-9])/i.exec(head);
+  if (lab && /^[A-Z]{6}[A-Z0-9]{2}$/.test(lab[1]!) && isRegion(lab[1]!.slice(4, 6))) return lab[1];
+  return undefined;
+}
+
+export function inferIssuingBank(message: string, f: Record<string, string>): { bic?: string; country?: string; source?: IssuingCountrySource } {
+  const a = parseBank(f["52A"]);
+  if (a.country && isRegion(a.country)) return { ...a, source: "52A" };
+  // 52A 不是 BIC（有的银行把名称地址写在 52A 里）时，按 52D 的自由文本处理
+  const d = f["52D"] ?? f["52A"];
+  if (d) {
+    for (const m of d.toUpperCase().matchAll(BIC_IN_TEXT)) {
+      if (isRegion(m[2]!)) return { bic: m[1], country: m[2], source: "52D" };
+    }
+    const c = countryFromText(d);
+    if (c) return { country: c, source: "52D" };
+  }
+  const sender = headerSenderBic(message);
+  if (sender) return { bic: sender, country: sender.slice(4, 6), source: "header" };
+  const c = countryFromText(f["50"]);
+  if (c) return { country: c, source: "applicant" };
+  return {};
+}
+
 export class Mt700Error extends AppError {}
 
 export function parseMt700(message: string): LetterOfCredit {
@@ -246,9 +338,10 @@ export function parseMt700(message: string): LetterOfCredit {
     if (m) lc.presentationDays = Number(m[1]);
   }
   if (f["40A"]) lc.form = f["40A"].trim();
-  const bank = parseBank(f["52A"]);
+  const bank = inferIssuingBank(message, f);
   lc.issuingBankBic = bank.bic;
   lc.issuingCountry = bank.country;
+  lc.issuingCountrySource = bank.source;
   lc.applicant = f["50"];
   lc.applicantName = partyName(f["50"]);
   lc.beneficiary = f["59"];

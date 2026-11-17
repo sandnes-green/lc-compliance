@@ -248,3 +248,46 @@ describe("引擎：覆盖情况与分阶段执行", () => {
     }
   });
 });
+
+describe("LCR-EXPIRY-PLACE / 公司最短间隔", () => {
+  const lcWith = (extra: string, expiry = "261221HONGKONG", latest = "261130") =>
+    parseMt700(SAMPLE_MT700.replace(":31D:240930NEW YORK", `:31D:${expiry}`).replace(":44C:240820", `:44C:${latest}`).replace(":27:1/1", `:27:1/1${extra}`));
+  it("在指定银行兑用：提示向到期地点的指定银行交单，并显示与最迟装运日的间隔", () => {
+    const [f] = expiryPlace.evaluate({ lc: lcWith("\n:41D:ANY BANK IN HONG KONG\nBY NEGOTIATION") });
+    expect(f!.code).toBe("lc.expiryPlace");
+    expect(f!.severity).toBe("info");
+    const zh = localizeFinding(f!, "zh").message;
+    expect(zh).toContain("ANY BANK IN HONG KONG");
+    expect(zh).toContain("相隔 21 天");
+  });
+  it("在开证行兑用、到期地点却在别国：疑点", () => {
+    const [f] = expiryPlace.evaluate({ lc: lcWith("\n:52A:TESTBDDHXXX\n:41D:ISSUING BANK\nBY PAYMENT") });
+    expect(f!.code).toBe("lc.expiryPlace.issuerConflict");
+    expect(f!.severity).toBe("doubt");
+  });
+  it("没有 41a（承兑行即开证行）、到期地点写 HONGKONG、开证行在孟加拉：疑点，且不要求有 41a 证据行", () => {
+    const [f] = expiryPlace.evaluate({ lc: lcWith("\n:52A:TESTBDDHXXX") });
+    expect(f!.code).toBe("lc.expiryPlace.issuerConflict");
+    expect(f!.evidence.map((e) => e.field)).toEqual(["31D", "44C"]);
+    const zh = localizeFinding(f!, "zh");
+    expect(zh.message).toContain("孟加拉");
+    expect(zh.message).toContain("无 41a");
+    expect(zh.message).toContain("相隔 21 天");
+  });
+  it("没有 41a、到期地点就是开证行国家：只提醒寄单时间", () => {
+    const [f] = expiryPlace.evaluate({ lc: lcWith("\n:52A:TESTBDDHXXX", "261221DHAKA") });
+    expect(f!.code).toBe("lc.expiryPlace.issuer");
+  });
+  it("31D 与 44C 恰好相隔 21 天不报，20 天报", () => {
+    expect(expiryVsShipment.evaluate({ lc: lcWith("", "261221HONGKONG", "261130") })).toEqual([]);
+    expect(expiryVsShipment.evaluate({ lc: lcWith("", "261220HONGKONG", "261130") }).map((f) => f.code)).toEqual(["lc.shortWindow"]);
+  });
+  it("在开证行兑用、到期地点在开证行国家：提示寄单时间", () => {
+    const [f] = expiryPlace.evaluate({ lc: lcWith("\n:52A:TESTBDDHXXX\n:41A:TESTBDDHXXX\nBY PAYMENT", "261221BANGLADESH") });
+    expect(f!.code).toBe("lc.expiryPlace.issuer");
+  });
+  it("交单期短于 21 天时，间隔不足公司要求也会提示", () => {
+    const lc = lcWith("\n:48:10/DAYS AFTER SHIPMENT", "261221HONGKONG", "261208");
+    expect(expiryVsShipment.evaluate({ lc }).map((f) => f.code)).toEqual(["lc.shortWindowPolicy"]);
+  });
+});

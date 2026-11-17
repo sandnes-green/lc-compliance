@@ -74,7 +74,10 @@ describe("银行系统导出格式的解析", () => {
     expect(masked.amount).toBe(0);
     expect(masked.amountMasked).toBe(true);
     const fs = placeholders.evaluate({ lc: masked });
-    expect(fs.some((f) => f.evidence[0]!.field === "32B")).toBe(true);
+    // 金额打码是草稿 / 打码件的常态：只做说明（info），不当作要改证的占位符
+    const amt = fs.find((f) => f.evidence[0]!.field === "32B")!;
+    expect(amt.code).toBe("lc.amountMasked");
+    expect(amt.severity).toBe("info");
     // 真正的格式错误仍然报错
     expect(() => parseMt700(":20:X\n:32B:USDABC")).toThrow(/32B/);
     expect(lc.amountMasked).toBeUndefined();
@@ -258,7 +261,8 @@ describe("LCR-BURDENSOME-CLAUSES（样本 003/004 的删除建议）", () => {
     const fs = burdensomeClauses.evaluate({ lc: lcOf() });
     expect(codes(fs)).toEqual(["lc.burden.carrierCert", "lc.burden.dispatchProof"]);
     expect(fs[0]!.severity).toBe("risk");
-    expect(fs[1]!.severity).toBe("doubt");
+    // 随单附电邮副本 / 快递收据是常见且做得到的条款：只做提醒，不建议删除
+    expect(fs[1]!.severity).toBe("info");
     expect(fs[1]!.evidence[0]!.field).toBe("46A");
   });
   it("证据取整条条款，不从单词中间截断", () => {
@@ -308,8 +312,14 @@ describe("LCR-BURDENSOME-CLAUSES（样本 003/004 的删除建议）", () => {
 });
 
 describe("LCR-SPARE-PARTS", () => {
-  it("写了备品固定数量、没有免费货物条款时提示", () => {
-    expect(codes(spareParts.evaluate({ lc: lcOf() }))).toEqual(["lc.spareParts"]);
+  it("备品作为单独一项写明了数量：是货物的一部分，不提示", () => {
+    expect(spareParts.evaluate({ lc: lcOf() })).toEqual([]);
+    expect(spareParts.evaluate({ lc: lcOf({ goodsDescription: "2. 21.5-INCH MONITOR PANEL AS SPARE PARTS QUANTITY: 76 UNIT" }) })).toEqual([]);
+  });
+  it("提到备品却没写数量、也没有免费货物条款：低级别提示", () => {
+    const fs = spareParts.evaluate({ lc: lcOf({ goodsDescription: "1. COMPUTER MONITOR QUANTITY: 10 UNIT WITH SPARE PARTS AS PER PROFORMA INVOICE" }) });
+    expect(codes(fs)).toEqual(["lc.spareParts"]);
+    expect(fs[0]!.severity).toBe("info");
   });
   it("已有免费备品可接受的条款则不提示；没有备品也不提示", () => {
     expect(spareParts.evaluate({ lc: lcOf({ additionalConditions: "+ANY FREE OF CHARGE SPARE PARTS SHOWN IN DOCUMENTS ARE ACCEPTABLE" }) })).toEqual([]);
@@ -371,6 +381,10 @@ describe("LCR-REF-TYPO（字母 O 与数字 0）", () => {
 
 describe("LCR-TYPO-WORDS（样本 004 初稿里没被批注的笔误）", () => {
   const goods = (g: string) => lcOf({ goodsDescription: g, documentsRequired: "", additionalConditions: "" });
+  it("PORT OF LOADING 的 LOADING 不是 LADING 的笔误", () => {
+    const lc = lcOf({ goodsDescription: "", documentsRequired: "+INVOICE SHOWING FOB VALUE AND FREIGHT CHARGE SEPARATELY AND TOTAL CFR VALUE OF THE GOODS, PORT OF LOADING AND STATING THAT", additionalConditions: "+LOADING AND UNLOADING CHARGES" });
+    expect(typoWords.evaluate({ lc })).toEqual([]);
+  });
   it("COMPUTR、21-5-INCH", () => {
     const fs = typoWords.evaluate({ lc: goods("+VALUE TOP COMPUTER MONITOR\n1.COMPUTR MONITOR 21-5-INCH\nX22IFR100") });
     expect(codes(fs)).toEqual(["lc.typo.hyphenDecimal", "lc.typo.word"]);

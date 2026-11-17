@@ -1,5 +1,5 @@
 import { CheckCircleOutlined, FilePdfOutlined, FileWordOutlined, MinusCircleOutlined, WarningOutlined } from "@ant-design/icons";
-import { formatLocalTime, isCustomRuleId, isLcStageRule, localizeFinding, ruleTitle } from "@lc/core";
+import { formatLocalTime, isCustomRuleId, isLcStageRule, localizeFinding, regionName, ruleTitle } from "@lc/core";
 import { App as AntApp, Alert, Button, Card, Collapse, Descriptions, Divider, Form, Input, Space, Table, Tabs, Tag, Typography } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import type { CaseRecord, Presentation, ReportFormat, Result, RunRecord } from "../../shared/api";
@@ -117,6 +117,16 @@ export default function CaseView({ caseId, initialTab = "lc", unwrap, onChanged 
               <Descriptions bordered size="small" column={2}>
                 <Descriptions.Item label={t("lc.reference")}>{lc.reference}</Descriptions.Item>
                 <Descriptions.Item label={t("lc.issueDate")}>{lc.issueDate ?? dash}</Descriptions.Item>
+                <Descriptions.Item label={t("lc.issuingCountry")} span={2}>
+                  {lc.issuingCountry ? (
+                    <>
+                      <Typography.Text strong>{regionName(lc.issuingCountry, lang)}（{lc.issuingCountry}）</Typography.Text>
+                      {lc.issuingCountrySource && <Typography.Text type="secondary"> · {t(`lc.issuingCountryVia.${lc.issuingCountrySource}`)}</Typography.Text>}
+                    </>
+                  ) : (
+                    <Typography.Text type="warning">{t("lc.issuingCountryUnknown")}</Typography.Text>
+                  )}
+                </Descriptions.Item>
                 <Descriptions.Item label={t("lc.amount")}>
                   {lc.currency} {lc.amountMasked ? (lang === "zh" ? "（草稿未填写）" : "(not filled in the draft)") : lc.amount.toLocaleString(lang === "zh" ? "zh-CN" : "en-US")}
                 </Descriptions.Item>
@@ -253,8 +263,12 @@ function RunView({ run, caseId }: { run: RunRecord; caseId: string }) {
   const isLcFinding = (f: RunRecord["findings"][number]) => (f.stage ? f.stage === "lc" : isLcStageRule(run.coverage, f.ruleId));
   const lcFindings = run.findings.filter(isLcFinding);
   const docFindings = run.findings.filter((f) => !isLcFinding(f));
-  const hasCoverage = run.coverage.checked.length + run.coverage.skipped.length > 0;
   const docsChecked = run.coverage.checked.some((id) => !isLcStageRule(run.coverage, id));
+  // 只审证时，检查清单里只列审证规则（审单规则因没有交单数据必然「未检查」，列出来只会造成误解）
+  const shown = (ids: string[]) => (docsChecked ? ids : ids.filter((id) => isLcStageRule(run.coverage, id)));
+  const checkedIds = shown(run.coverage.checked);
+  const skippedIds = shown(run.coverage.skipped);
+  const hasCoverage = checkedIds.length + skippedIds.length > 0;
   const counts = (["discrepancy", "risk", "doubt", "info"] as const).map((s) => [s, run.findings.filter((f) => f.severity === s).length] as const);
 
   return (
@@ -278,27 +292,24 @@ function RunView({ run, caseId }: { run: RunRecord; caseId: string }) {
 
       <Section title={t("result.section.lc")} findings={lcFindings} empty={<Alert type="success" showIcon message={t("result.sectionClean")} />} />
 
-      <Section
-        title={t("result.section.docs")}
-        findings={docFindings}
-        empty={
-          docsChecked ? (
-            <Alert type="warning" showIcon message={t("result.noneTitle")} description={t("result.noneDesc")} />
-          ) : (
-            <Alert type="info" showIcon message={t("result.noPresentation")} />
-          )
-        }
-      />
+      {/* 软件以审证为主：没有录入交单数据时不显示审单部分，也不催用户录入 */}
+      {(docsChecked || docFindings.length > 0) && (
+        <Section
+          title={t("result.section.docs")}
+          findings={docFindings}
+          empty={<Alert type="warning" showIcon message={t("result.noneTitle")} description={t("result.noneDesc")} />}
+        />
+      )}
 
       <Collapse
         items={[
           {
             key: "coverage",
-            label: hasCoverage ? t("result.coverage.title", { checked: run.coverage.checked.length, skipped: run.coverage.skipped.length }) : t("result.coverage.unknown"),
+            label: hasCoverage ? t("result.coverage.title", { checked: checkedIds.length, skipped: skippedIds.length }) : t("result.coverage.unknown"),
             children: (
               <Space direction="vertical" size={4}>
-                {[...run.coverage.checked, ...run.coverage.skipped].map((id) => {
-                  const skipped = run.coverage.skipped.includes(id);
+                {[...checkedIds, ...skippedIds].map((id) => {
+                  const skipped = skippedIds.includes(id);
                   const n = run.findings.filter((f) => f.ruleId === id).length;
                   const icon = skipped ? <MinusCircleOutlined style={{ color: "#999" }} /> : n > 0 ? <WarningOutlined style={{ color: "#fa8c16" }} /> : <CheckCircleOutlined style={{ color: "#52c41a" }} />;
                   return (

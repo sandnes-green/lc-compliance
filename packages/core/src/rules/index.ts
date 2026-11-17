@@ -19,4 +19,4 @@ export * from "./carrierBl";
 export const allRules: Rule[] = [...lcReviewRules, ...draftReviewRules, ...lcExtraRules, ...ucp600Rules, ...documentRules];
 
 /** 规则库版本：规则内容变化时递增，随每次审查结果落库，便于追溯 */
-export const RULESET_VERSION = "builtin-0.5.0";
+export const RULESET_VERSION = "builtin-0.6.0";
