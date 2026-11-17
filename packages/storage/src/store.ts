@@ -428,7 +428,14 @@ export class CaseStore {
     if (!c) throw notFound(caseId);
     const items = this.listCheckItems().filter((i) => i.status === "enabled");
     const countryRules = this.listCountryRules();
-    const result = runRules([...allRules, buildCountryRiskRule(countryRules), buildCarrierBlRule(countryRules), ...buildCustomRules(items)], { lc: c.lc, presentation: c.presentation, documents: this.listDocumentTexts(caseId) });
+    // 每次审查都从信用证原文重新解析，旧案件也能用上新版解析（如开证行国家的识别）；万一解析失败则沿用建案时的结果
+    let lc = c.lc;
+    try {
+      lc = parseMt700(c.lcText);
+    } catch {
+      /* 沿用已存的解析结果 */
+    }
+    const result = runRules([...allRules, buildCountryRiskRule(countryRules), buildCarrierBlRule(countryRules), ...buildCustomRules(items)], { lc, presentation: c.presentation, documents: this.listDocumentTexts(caseId) });
 
     // 合并 AI 判断类检查项的结果
     const ORDER = { discrepancy: 0, risk: 1, doubt: 2, info: 3 } as const;

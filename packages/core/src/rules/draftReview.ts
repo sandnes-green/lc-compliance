@@ -112,7 +112,8 @@ export const burdensomeClauses: LcRule = {
             makeFinding({
               ruleId: this.id,
               clause: this.clause,
-              severity: code === "lc.burden.dispatchProof" ? "doubt" : "risk",
+              // 随单附电邮 / 快递副本是常见且做得到的条款（不应要求删除），只提醒照做并随正本交单
+              severity: code === "lc.burden.dispatchProof" ? "info" : "risk",
               code,
               params: { snippet: value },
               evidence: [{ document: "lc", field, value }],
@@ -140,6 +141,8 @@ export const spareParts: LcRule = {
     const f = flat(goods).toUpperCase();
     const m = /\bSPARE\s+PARTS?\b(?:\s+QUANTITY\s*:?\s*\d+\s*[A-Z]*)?/.exec(f);
     if (!m) return [];
+    // 备品作为单独一项、写明了数量：它就是信用证货物的一部分（照数量出运、开发票），不是问题
+    if (/\d/.test(m[0]) || /^[^+]{0,60}?\b(?:QUANTITY|QTY)\b\s*:?\s*\d/.test(f.slice(m.index + m[0].length))) return [];
     const all = FIELDS.map(([, pick]) => pick(lc) ?? "").join(" ").toUpperCase();
     if (FOC.test(all)) return [];
     const value = clauseAround(flat(goods), m.index, m[0].length, true);
@@ -147,7 +150,7 @@ export const spareParts: LcRule = {
       makeFinding({
         ruleId: this.id,
         clause: this.clause,
-        severity: "doubt",
+        severity: "info",
         code: "lc.spareParts",
         params: { snippet: value },
         evidence: [{ document: "lc", field: "45A", value }],
@@ -294,6 +297,14 @@ const VOCAB_BASE = [
   "REQUIRE", "REQUIRED", "SEAWORTHY", "SEAPORT", "SEPARATELY", "STANDARD", "TRANSPORT", "TRANSHIPMENT", "TRANSSHIPMENT", "UNITED", "REGULATION",
   "ORGANISATION", "ORGANIZATION", "GOVERNMENT", "APPROVED", "AMOUNT", "CHARGE", "COURIER", "DISPATCH", "ADDRESS", "CARRIER", "AGENCY", "ORIGINATE",
 ];
+/**
+ * 本身就是正确单词、但与上表某词只差一个字母的常见词：不当作笔误
+ * （如 PORT OF LOADING 的 LOADING 与 BILL OF LADING 的 LADING）
+ */
+const VOCAB_REAL = [
+  "LOADING", "UNLOADING", "LOADED", "CHANGE", "PREVENT", "CHARTER", "CHARTERED", "MARKED", "MARKING",
+  "COUNTY", "INSURER", "ISSUER", "PRESENTER", "CARRIAGE", "ORIGINATED", "CONSIGNEE", "COURIERED",
+];
 /** 词形变化：复数、过去式、-ing、-er、-ly；-e 结尾与 -y 结尾的词另有变形 */
 function wordForms(w: string): string[] {
   const f = [w, `${w}S`, `${w}ES`, `${w}ED`, `${w}D`, `${w}ING`, `${w}ER`, `${w}ERS`, `${w}LY`];
@@ -301,7 +312,7 @@ function wordForms(w: string): string[] {
   if (w.endsWith("Y")) f.push(`${w.slice(0, -1)}IES`, `${w.slice(0, -1)}IED`);
   return f;
 }
-const VOCAB_FORMS = new Set(VOCAB_BASE.flatMap(wordForms));
+const VOCAB_FORMS = new Set([...VOCAB_BASE, ...VOCAB_REAL].flatMap(wordForms));
 
 /** a 与 b 恰好差一个字母：多一个、少一个、写错一个，或相邻两个字母写反 */
 function oneEdit(a: string, b: string): boolean {
@@ -392,8 +403,9 @@ export const placeholders: LcRule = {
         makeFinding({
           ruleId: this.id,
           clause: this.clause,
-          severity: "doubt",
-          code: "lc.placeholder",
+          // 草稿 / 打码件里金额写成 USDXXXX 很常见，不是条款问题；只说明与金额有关的检查已跳过
+          severity: "info",
+          code: "lc.amountMasked",
           params: { snippet: value },
           evidence: [{ document: "lc", field: "32B", value }],
         }),

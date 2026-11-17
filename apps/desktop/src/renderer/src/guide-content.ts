@@ -66,6 +66,7 @@ const zh: Section[] = [
       { type: "note", text: "**信用证电文是什么？** 开证银行发给你们的信用证，通常是一段以 :20:、:32B: 这类编号开头的文本（SWIFT MT700 格式）。请向你们的银行或公司单证员要「电文文本」。" },
       { type: "warn", text: "目前只能导入这种电文文本，**不能直接导入信用证的 PDF 或纸质件**。如果只有 PDF，请让银行提供电文文本。" },
       { type: "p", text: "创建成功后，在「{{tab.lc}}」页可以看到软件读出来的金额、有效期、最迟装运日等。请**对照原件核对一遍**这些信息是否读对了。" },
+      { type: "note", text: "**开证行国别是必看项。** 「{{tab.lc}}」页会显示开证行所在国家（如孟加拉），国别规则（如是否要求船东单）都按它来判断。软件先看 52A / 52D，再看报文头的发送行，都没有时才按申请人地址推断（会注明「推断」）。显示「未识别」或推断错误时，请自行确认开证行国别，并对照「国别规则」。" },
     ],
   },
   {
@@ -282,6 +283,7 @@ const en: Section[] = [
       { type: "note", text: "**What is an L/C message?** The credit your issuing bank sends is usually a block of text whose lines start with tags such as :20: and :32B: (SWIFT MT700 format). Ask your bank or your documentation clerk for the “message text”." },
       { type: "warn", text: "At the moment you can only import this message text; **a PDF or paper copy of the credit cannot be imported directly**. If you only have a PDF, ask the bank for the message text." },
       { type: "p", text: "After it is created, the “{{tab.lc}}” tab shows the amount, expiry, latest shipment date and so on that the software read. **Compare them with the original** to be sure they were read correctly." },
+      { type: "note", text: "**The issuing bank's country is a must-check item.** The “{{tab.lc}}” tab shows it (for example Bangladesh), and the country rules (such as requiring a carrier B/L) are applied by it. The software looks at 52A / 52D first, then the sender in the message header, and only if neither exists infers it from the applicant's address (marked “inferred”). If it shows “not identified”, or the inference is wrong, confirm the issuing bank's country yourself and compare it with the “Country rules”." },
     ],
   },
   {

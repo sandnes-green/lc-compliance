@@ -85,6 +85,46 @@ export const DOC_CATALOG: Record<string, Entry> = {
     zh: { message: "信用证有效期 {expiry} 早于最迟装运日 {latest}：按最迟装运日出运将无法在有效期内交单", suggestion: "发运前请申请人修改，使有效期晚于最迟装运日，并留足交单期。" },
     en: { message: "The credit expires on {expiry}, before the latest shipment date {latest}: if you ship by the latest date, you cannot present documents within the validity", suggestion: "Before shipping, ask the applicant to amend so that expiry falls after the latest shipment date, with enough time to present." },
   },
+  "lc.shortWindowPolicy": {
+    zh: {
+      message: "最迟装运日 {latest} 到有效期 {expiry} 只相隔 {window} 天，不满足公司要求的至少 {min} 天",
+      suggestion: "按公司审证指令，有效期与最迟装运日至少相隔 {min} 天；请要求申请人延长有效期或提前最迟装运日。",
+    },
+    en: {
+      message: "Only {window} day(s) separate the latest shipment date {latest} from expiry {expiry}, below the company minimum of {min} days",
+      suggestion: "Company policy requires at least {min} days between the latest shipment date and expiry; ask the applicant to extend the expiry or bring the latest shipment date forward.",
+    },
+  },
+  "lc.expiryPlace": {
+    zh: {
+      message: "到期地点为「{place}」：单据须在有效期 {expiry} 当天或之前，提交到 41a 指定的兑用银行（{availZh}），再由该行寄给开证行。{gapZh}",
+      suggestion: "交单截止看的是到期地点的指定银行收单日，不是开证行收单日；请按银行内部审单与寄单所需时间提前交单。",
+    },
+    en: {
+      message: "The credit expires at “{place}”: documents must be presented on or before {expiry} to the bank the credit is available with under field 41a ({availEn}), which then forwards them to the issuing bank.{gapEn}",
+      suggestion: "The deadline is when the nominated bank at the place of expiry receives the documents, not the issuing bank; leave time for that bank's checking and dispatch.",
+    },
+  },
+  "lc.expiryPlace.issuer": {
+    zh: {
+      message: "信用证在开证行兑用（{availZh}）：单据须在有效期 {expiry} 当天或之前交到开证行（{countryZh}）。{gapZh}",
+      suggestion: "开证行在境外，请预留国际快递时间，通常应提前一周以上交单。",
+    },
+    en: {
+      message: "The credit is available with the issuing bank ({availEn}): documents must reach the issuing bank ({countryEn}) on or before {expiry}.{gapEn}",
+      suggestion: "The issuing bank is abroad; allow for international courier time — present at least a week early.",
+    },
+  },
+  "lc.expiryPlace.issuerConflict": {
+    zh: {
+      message: "到期地点「{place}」与开证行所在国家（{countryZh}）不一致：信用证在开证行兑用（{availZh}），单据实际要在有效期 {expiry} 前交到开证行，不是「{place}」。{gapZh}",
+      suggestion: "请要求开证行把到期地点（31D）改为开证行所在地（{countryZh}）；47A 里提到的通知行 / 办理行只是协助办理单据，不改变到期地点。",
+    },
+    en: {
+      message: "The place of expiry “{place}” does not match the issuing bank's country ({countryEn}): the credit is available with the issuing bank ({availEn}), so documents have to reach the issuing bank by {expiry}, not “{place}”.{gapEn}",
+      suggestion: "Ask the issuing bank to change the place of expiry (31D) to the issuing bank's location ({countryEn}); an advising or handling bank mentioned in 47A only assists with documents and does not change the place of expiry.",
+    },
+  },
   "lc.shortWindow": {
     zh: {
       message: "最迟装运日 {latest} 到有效期 {expiry} 只有 {window} 天，少于交单期 {days} 天：若临近最迟装运日出运，可用于交单的时间不足",
@@ -94,10 +134,6 @@ export const DOC_CATALOG: Record<string, Entry> = {
       message: "Only {window} day(s) separate the latest shipment date {latest} from expiry {expiry}, less than the {days}-day presentation period: shipping close to the latest date leaves too little time to present",
       suggestion: "Ship early, or ask the applicant to amend the expiry or latest shipment date so there is enough time to present.",
     },
-  },
-  "lc.expiryPlace": {
-    zh: { message: "到期地点为「{place}」：须在有效期 {expiry} 当天或之前，将单据送达该地的银行", suggestion: "到期地点在境外时，请预留国际快递时间，通常应提前数天交单。" },
-    en: { message: "The credit expires at “{place}”: documents must reach the bank there on or before {expiry}", suggestion: "If that place is abroad, allow for international courier time and present several days early." },
   },
   "lc.soft.applicantDoc": {
     zh: { message: "疑似软条款：要求由申请人出具或签署的单据 ——「{snippet}」", suggestion: SOFT_SUGGEST_ZH },
@@ -124,8 +160,8 @@ export const DOC_CATALOG: Record<string, Entry> = {
     en: { message: "A certificate from the carrier or shipowner is required — “{snippet}”", suggestion: "Carriers rarely issue such certificates, so you cannot obtain one yourself; before shipping, ask the applicant to have the issuing bank delete the clause." },
   },
   "lc.burden.dispatchProof": {
-    zh: { message: "要求快递收据 / 电邮副本 / 发送证明随正本单据一并提交 ——「{snippet}」", suggestion: "这属于额外的随单文件，容易漏交成为不符点；建议删除，或至少把快递改为电邮并明确无需随正本提交。" },
-    en: { message: "A courier receipt, e-mail copy or dispatch proof must accompany the original documents — “{snippet}”", suggestion: "This is an extra accompanying document that is easy to miss and become a discrepancy; ask to delete it, or at least change courier to e-mail and drop the accompany requirement." },
+    zh: { message: "提醒：发运后须把副本单据电邮 / 快递给申请人，并把电邮副本或快递收据随正本单据一并提交 ——「{snippet}」", suggestion: "这是常见条款，按要求做即可，不建议要求删除。发运后及时发出电邮（或快递），打印电邮页面（或保留快递收据）放进交单的单据里；漏交会成为不符点。" },
+    en: { message: "Reminder: after shipment, send copy documents to the applicant by e-mail or courier and include the e-mail copy or courier receipt with the original documents — “{snippet}”", suggestion: "This is a common clause — comply rather than ask to delete it. Send the e-mail (or courier) promptly after shipment and put a printout of the e-mail (or the courier receipt) in the presentation; leaving it out is a discrepancy." },
   },
   "lc.burden.localAgentBl": {
     zh: { message: "要求提单显示孟加拉船代 / 承运人的名称、地址、电话等 ——「{snippet}」", suggestion: "使用 Master B/L 时提单上没有这些信息，会形成不符点；请要求删除，或确认船公司的提单格式能满足。" },
@@ -136,8 +172,12 @@ export const DOC_CATALOG: Record<string, Entry> = {
     en: { message: "Detailed layout requirements for the invoice or packing list (table columns, one row per item, etc.) — “{snippet}”", suggestion: "The more detailed the layout, the easier it is to slip into a discrepancy; ask to delete such clauses to keep the credit simple." },
   },
   "lc.spareParts": {
-    zh: { message: "货物描述里写明了备品及固定数量，且信用证没有「免费货物可接受」的约定 ——「{snippet}」", suggestion: "若随货另发免费备品，发票数量会与信用证不符；请先核对备品数量，并要求在 47A 增加“随附的免费备品可接受”。" },
-    en: { message: "The goods description states spare parts in a fixed quantity and the credit has no clause accepting free-of-charge goods — “{snippet}”", suggestion: "If you ship extra free spare parts the invoice quantity will not match the credit; confirm the spare-part quantity and ask for a field 47A clause accepting free-of-charge spare parts." },
+    zh: { message: "货物描述提到备品但没写数量 ——「{snippet}」", suggestion: "核对备品是否按形式发票列在货物里、数量多少；若另有随货免费备品，须信用证写明可接受，否则发票数量会与信用证不符。" },
+    en: { message: "The goods description mentions spare parts without a quantity — “{snippet}”", suggestion: "Check how the spare parts appear on the proforma invoice and in what quantity; if extra free spare parts will be shipped, the credit must say they are acceptable, or the invoice quantity will not match." },
+  },
+  "lc.amountMasked": {
+    zh: { message: "金额未写实际数字（{snippet}），与金额有关的检查已跳过", suggestion: "草稿或打码件常这样写，不是条款问题；核对正本金额时请人工对照形式发票。" },
+    en: { message: "The amount is not written out ({snippet}), so amount-related checks were skipped", suggestion: "Drafts and masked copies often look like this and it is not a clause problem; check the amount on the issued credit against the proforma invoice by hand." },
   },
   "lc.dates.coverBeforeProforma": {
     zh: { message: "保险暂保单日期 {cover} 早于形式发票日期 {proforma}", suggestion: "暂保单通常在形式发票之后出具；这多半是沿用了旧暂保单，请要求申请人核对暂保单号与日期。" },
@@ -172,12 +212,12 @@ export const DOC_CATALOG: Record<string, Entry> = {
     en: { message: "An unfilled placeholder remains in the text — “{snippet}”", suggestion: "Placeholders such as MC-XXXX must be replaced with real values in the issued credit; ask the issuing bank to complete them before you prepare the goods." },
   },
   "country.hit": {
-    zh: { message: "开证行所在国家：{countryZh}（{country}）{stateZh}。该国的要求：{reqZh}。{note}", suggestion: "发运前对照这些要求逐项确认；国别规则由你们公司维护，可在“国别规则”中修改。" },
-    en: { message: "Issuing bank country: {countryEn} ({country}){stateEn}. Requirements: {reqEn}. {note}", suggestion: "Check each requirement before shipping; the country rules are maintained by your company under “Country rules”." },
+    zh: { message: "开证行所在国家：{countryZh}（{country}）{viaZh}{stateZh}。该国的要求：{reqZh}。{note}", suggestion: "发运前对照这些要求逐项确认；国别规则由你们公司维护，可在“国别规则”中修改。" },
+    en: { message: "Issuing bank country: {countryEn} ({country}){viaEn}{stateEn}. Requirements: {reqEn}. {note}", suggestion: "Check each requirement before shipping; the country rules are maintained by your company under “Country rules”." },
   },
   "country.unknown": {
-    zh: { message: "未能从 52A 识别开证行所在国家，国别规则未检查", suggestion: "请人工确认开证行所在国家，并对照“国别规则”。" },
-    en: { message: "The issuing bank country could not be read from field 52A, so country rules were not checked", suggestion: "Confirm the issuing bank country manually and compare it with the country rules." },
+    zh: { message: "未能识别开证行所在国家（52A/52D、报文头发送行、申请人地址里都没有读到），国别规则未检查", suggestion: "请人工确认开证行所在国家，并对照“国别规则”。" },
+    en: { message: "The issuing bank country could not be identified (nothing usable in 52A/52D, the message sender or the applicant's address), so country rules were not checked", suggestion: "Confirm the issuing bank country manually and compare it with the country rules." },
   },
   "carrierBl.forwarder": {
     zh: { message: "要求提交船东单（来源：{sourceZh}），但提单的签发人看起来是货代：{issuer}", suggestion: "货代提单（House B/L）可能被银行当作不符点。请改用船公司（承运人）签发的提单，或在发运前要求申请人修改该条款。" },
